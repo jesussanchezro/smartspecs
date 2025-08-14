@@ -6,6 +6,7 @@ interface MeetingFormProps {
   onCancel: () => void;
   onSaveSuccess?: () => void;
   onProcessingStart?: () => void;
+  onShowRequirementsModal?: (requirements: any[], meetingTitle: string) => void;
 
   // Si es edición, pasamos la meeting
   meeting?: Meeting;
@@ -23,6 +24,7 @@ const MeetingForm: React.FC<MeetingFormProps> = ({
   onCancel,
   onSaveSuccess,
   onProcessingStart,
+  onShowRequirementsModal,
   projectId,
   projectTitle,
   projectDescription,
@@ -53,6 +55,7 @@ const MeetingForm: React.FC<MeetingFormProps> = ({
     onSaveSuccess,
     onCancel,
     onProcessingStart,
+    onShowRequirementsModal
   });
 
   // Para indicar si es edición en la UI

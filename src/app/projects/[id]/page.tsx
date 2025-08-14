@@ -13,10 +13,13 @@ import SuccessMessage from "@/smartspecs/app-lib/components/messages/SuccessMess
 import MeetingForm from "@/smartspecs/app-lib/components/forms/MeetingForm";
 import RequirementForm from "@/smartspecs/app-lib/components/forms/RequirementForm";
 import RequirementList from "@/smartspecs/app-lib/components/lists/requirements-list/RequirementList";
+import RequirementSelectionModal from "@/smartspecs/app-lib/components/modals/RequirementSelectionModal";
 import { useProjectData } from "@/smartspecs/app-lib/hooks/projects/useProjectData";
 import { useProjectDetail } from "@/smartspecs/app-lib/hooks/projects/useProjectDetail";
 import { Requirement } from "@/smartspecs/app-lib/interfaces/requirement";
 import { useRouter } from 'next/navigation';
+import { sendSelectedRequirements } from "@/smartspecs/app-lib/utils/difyProcessor";
+import { useAppDispatch } from "@/smartspecs/app-lib/hooks/useAppDispatch";
 
 const ProjectDetail: React.FC = () => {
   // Este hook se encarga de cargar datos: proyecto, reuniones, requerimientos
@@ -30,6 +33,7 @@ const ProjectDetail: React.FC = () => {
     requirementsError,
   } = useProjectData();
   const router = useRouter();
+  const dispatch = useAppDispatch();
   // Este hook maneja los estados de UI: editar, modales, mensajes de éxito, etc.
   const {
     isEditing,
@@ -47,6 +51,9 @@ const ProjectDetail: React.FC = () => {
   const [showCopySuccess, setShowCopySuccess] = useState(false);
   const [isMeetingProcessing, setIsMeetingProcessing] = useState(false);
   const [showRequirementModal, setShowRequirementModal] = useState(false);
+  const [showRequirementsSelectionModal, setShowRequirementsSelectionModal] = useState(false);
+  const [requirementsToProcess, setRequirementsToProcess] = useState<Requirement[]>([]);
+  const [meetingTitleForModal, setMeetingTitleForModal] = useState("");
 
   const handleCopyRequirements = () => {
     const requirementsText = requirements.map(req => {
@@ -75,6 +82,19 @@ const ProjectDetail: React.FC = () => {
 
   const handleRequirementSaveSuccess = () => {
     setShowRequirementModal(false);
+  };
+
+  const handleShowRequirementsModal = (requirements: Requirement[], meetingTitle: string) => {
+    setRequirementsToProcess(requirements);
+    setMeetingTitleForModal(meetingTitle);
+    setShowRequirementsSelectionModal(true);
+  };
+
+  const handleSendSelectedRequirements = async (selectedRequirements: Requirement[]) => {
+    if (project?.id) {
+      await sendSelectedRequirements(dispatch, project.id, "", selectedRequirements);
+      setShowRequirementsSelectionModal(false);
+    }
   };
 
   const handleAddMeetingClick = () => {
@@ -186,6 +206,7 @@ const ProjectDetail: React.FC = () => {
           onCancel={() => setShowMeetingModal(false)}
           onSaveSuccess={handleMeetingSaveSuccess}
           onProcessingStart={handleMeetingProcessingStart}
+          onShowRequirementsModal={handleShowRequirementsModal}
           projectId={project.id}
           projectTitle={project.title}
           projectDescription={project.description}
@@ -199,6 +220,16 @@ const ProjectDetail: React.FC = () => {
           onCancel={() => setShowRequirementModal(false)}
           onSaveSuccess={handleRequirementSaveSuccess}
           projectId={project.id}
+        />
+      </Modal>
+
+      <Modal isOpen={showRequirementsSelectionModal} onClose={() => setShowRequirementsSelectionModal(false)}>
+        <RequirementSelectionModal
+          isOpen={showRequirementsSelectionModal}
+          onClose={() => setShowRequirementsSelectionModal(false)}
+          meetingTitle={meetingTitleForModal}
+          requirements={requirementsToProcess}
+          onSend={handleSendSelectedRequirements}
         />
       </Modal>
 
@@ -230,6 +261,12 @@ const ProjectDetail: React.FC = () => {
               onClick={() => setShowRequirementModal(true)}
             >
               Add Requirement
+            </button>
+            <button
+              className="bg-purple-500 text-white px-4 py-2 rounded hover:bg-purple-600 transition-colors"
+              onClick={() => setShowRequirementsSelectionModal(true)}
+            >
+              Select Requirements
             </button>
           </div>
         </div>

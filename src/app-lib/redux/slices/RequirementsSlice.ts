@@ -228,6 +228,44 @@ export const getRequirementsByProject = createAsyncThunk(
   }
 );
 
+export const loadRequirements = createAsyncThunk(
+  "requirements/loadRequirements",
+  async (projectId: string, { rejectWithValue }) => {
+    try {      
+      const q = query(
+        collection(firestore, "requirements"),
+        where("projectId", "==", projectId)
+      );
+
+      const snap = await getDocs(q);
+
+      const requirements = snap.docs.map((doc) => {
+        const data = doc.data();
+        const requirement = {
+          id: doc.id,
+          projectId: data.projectId || data.project_id,
+          title: data.title || "Untitled",
+          description: data.description || "",
+          priority: data.priority || "medium",
+          status: data.status || Status.IN_PROGRESS,
+          responsible: data.responsible || "",
+          reason: data.reason || "",
+          origin: data.origin || "Dify",
+          createdAt: toISODate(data.createdAt),
+          updatedAt: toISODate(data.updatedAt),
+        } as Requirement;
+
+        return RequirementAdapter.toApp(RequirementAdapter.toDomain(requirement));
+      });
+
+      return requirements;
+    } catch (error) {
+      console.error("Error loading requirements:", {error});
+      return rejectWithValue("Error loading requirements");
+    }
+  }
+);
+
 // Slice
 const requirementSlice = createSlice({
   name: "requirements",

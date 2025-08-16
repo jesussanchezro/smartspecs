@@ -168,22 +168,7 @@ export async function sendSelectedRequirements(
 ) {
   try {
     
-    for (const requirement of selectedRequirements) {
-        await dispatch(
-          createRequirement({
-            projectId,
-            title: requirement.title,
-            description: requirement.description,
-            priority: requirement.priority ?? Priority.MEDIUM,
-            status: mapStatus(requirement.status),
-            responsible: requirement.responsible || "",
-            origin: requirement.origin || "Dify",
-            reason: requirement.reason || "",
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-          })
-        );
-    }
+    //TODO: Enviar todos los requerimientos seleccionados y rechazados
     
   } catch (error) {
     console.error({error});

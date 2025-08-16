@@ -1,9 +1,7 @@
 import { AppDispatch } from "@/smartspecs/app-lib/redux/store";
 import { callDifyWorkflow } from "@/smartspecs/app-lib/utils/difyClient";
 import { createRequirement, updateRequirement, loadRequirements } from "@/smartspecs/app-lib/redux/slices/RequirementsSlice";
-import { firestore } from "@/smartspecs/lib/config/firebase-settings";
 import { Priority, Requirement, Status } from "@/smartspecs/app-lib/interfaces/requirement";
-import { doc, getDoc, setDoc, collection, Timestamp } from "firebase/firestore";
 
 interface ProcessDifyParams {
   dispatch: AppDispatch;
@@ -17,6 +15,7 @@ interface ProcessDifyParams {
   meetingTranscription: string;
   requirementsList: Requirement[];
   onShowModal?: (requirements: Requirement[], meetingTitle: string) => void;
+  status?: string;
 }
 
 function mapStatus(value: string): Status {
@@ -54,39 +53,28 @@ export async function processDifyWorkflow({
       meetingTitle,
       meetingDescription,
       meetingTranscription,
-      requirementsList
+      requirementsList,
+      status
     );
 
-    const updatedRequirementsList = wfResp?.updatedRequirementsList ?? [];
-    const newRequirementsList = wfResp?.newRequirementsList ?? [];
 
-    console.log({updatedRequirementsList,newRequirementsList})
-    
-    // 🎯 Cargar requerimientos actualizados y mostrar confirmación
-    const requerimientos = await dispatch(loadRequirements(projectId));
-    
-    // 🆕 Mostrar modal de selección si hay callback
-    if (onShowModal && (updatedRequirementsList.length > 0 || newRequirementsList.length > 0)) {
-      const allRequirements = [...updatedRequirementsList, ...newRequirementsList];
-      onShowModal(allRequirements, meetingTitle);
-      return; // Salir aquí, el modal se encargará de enviar los requirements
+    const newRequirementsList = (wfResp?.newRequirementsList ?? [])
+        .map((requeriment, index) => ({
+          ...requeriment,
+          id: `temp_${Date.now()}_${index}`
+        })
+      );
+
+    if (onShowModal && newRequirementsList.length > 0) {
+      onShowModal(newRequirementsList, meetingTitle);
     }
     
-    // Si no hay modal, enviar todos automáticamente
-    const totalRequirements = updatedRequirementsList.length + newRequirementsList.length;
-    if (totalRequirements > 0) {
-      alert(`✅ Se han enviado ${totalRequirements} requirements a Firebase exitosamente!`);
-    } else {
-      alert("ℹ️ No se generaron nuevos requirements de esta reunión.");
-    }
 
   } catch (err) {
-    console.error("❌ Error en processDifyWorkflow:", err);
-    alert("❌ Error al procesar los requirements con Dify");
+    console.error("Error en processDifyWorkflow:", err);
   }
 }
 
-// 🆕 Función para enviar requirements seleccionados
 export async function sendSelectedRequirements(
   dispatch: AppDispatch,
   projectId: string,
@@ -95,11 +83,14 @@ export async function sendSelectedRequirements(
 ) {
   try {
     console.log("🚀 Enviando requirements seleccionados:", selectedRequirements.length);
+    console.log("📋 Requirements a procesar:", selectedRequirements);
     
     for (const req of selectedRequirements) {
+      console.log("🔄 Procesando requirement:", req.title);
+      
       if (req.id && req.id.startsWith('temp_')) {
-        // Es un requirement nuevo
-        await dispatch(
+        console.log("✅ Creando nuevo requirement:", req.title);
+        const result = await dispatch(
           createRequirement({
             projectId,
             title: req.title,
@@ -113,9 +104,10 @@ export async function sendSelectedRequirements(
             updatedAt: new Date().toISOString(),
           })
         );
+        console.log("✅ Resultado creación:", result);
       } else {
-        // Es un requirement existente que se actualiza
-        await dispatch(
+        console.log("🔄 Actualizando requirement existente:", req.title);
+        const result = await dispatch(
           updateRequirement({
             id: req.id,
             updatedData: {
@@ -130,15 +122,15 @@ export async function sendSelectedRequirements(
             },
           })
         );
+        console.log("🔄 Resultado actualización:", result);
       }
     }
     
-    // Recargar requirements y mostrar confirmación
+    console.log("🔄 Recargando requirements del proyecto...");
     await dispatch(loadRequirements(projectId));
-    alert(`✅ Se han enviado ${selectedRequirements.length} requirements a Firebase exitosamente!`);
+    console.log("✅ Requirements recargados exitosamente");
     
-  } catch (err) {
-    console.error("❌ Error enviando requirements seleccionados:", err);
-    alert("❌ Error al enviar los requirements seleccionados");
+  } catch (error) {
+    console.error("❌ Error en sendSelectedRequirements:", error);
   }
 }

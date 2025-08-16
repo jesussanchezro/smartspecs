@@ -210,7 +210,8 @@ export const useMeetingForm = ({
             meetingDescription: description,
             meetingTranscription: transcription,
             requirementsList: requirementsList as Requirement[],
-            onShowModal: onShowRequirementsModal
+            onShowModal: onShowRequirementsModal,
+            status: "new"
           });
 
           // Refrescamos lista

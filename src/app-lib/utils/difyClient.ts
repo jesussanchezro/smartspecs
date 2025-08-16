@@ -18,7 +18,8 @@ export async function callDifyWorkflow(
   meetingTitle: string,
   meetingDescription: string,
   meetingTranscription: string,
-  requirementsList: Requirement[]
+  requirementsList: Requirement[],
+  status?: string
 ): Promise<{
   updatedRequirementsList: Requirement[];
   newRequirementsList: Requirement[];
@@ -38,6 +39,7 @@ export async function callDifyWorkflow(
         requirements_list: requirementsList.length > 0
           ? JSON.stringify(requirementsList)
           : "[]",  // <- Esto garantiza siempre enviar un array válido
+        status: status || "new"
       },
     };
 

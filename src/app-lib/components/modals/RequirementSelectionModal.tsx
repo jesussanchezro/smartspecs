@@ -100,7 +100,7 @@ const RequirementSelectionModal: React.FC<RequirementSelectionModalProps> = ({
                 type="checkbox"
                 checked={selectedIds.includes(requirement.id)}
                 onChange={(e) => {
-                  e.stopPropagation(); // Evitar que se ejecute el onClick del div padre
+                  e.stopPropagation();
                   handleRequirementToggle(requirement.id);
                 }}
                 className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500 mt-1 cursor-pointer"
@@ -111,9 +111,6 @@ const RequirementSelectionModal: React.FC<RequirementSelectionModalProps> = ({
                 <div className="flex space-x-2 mt-2">
                   <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                     {requirement.priority}
-                  </span>
-                  <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                    {requirement.status}---
                   </span>
                 </div>
               </div>

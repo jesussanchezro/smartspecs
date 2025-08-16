@@ -25,32 +25,26 @@ export async function callDifyWorkflow(
   updatedRequirementsList: Requirement[];
   newRequirementsList: Requirement[];
 }> {
-  const inputs = {
-    project_id: projectId,
-    project_title: projectTitle,
-    project_description: projectDescription,
-    project_client: projectClient,
-    meeting_id: meetingId,
-    meeting_title: meetingTitle,
-    meeting_description: meetingDescription,
-    meeting_transcription: meetingTranscription,
-    requirements_list: requirementsList.length > 0
-      ? JSON.stringify(requirementsList)
-      : "[]",  // <- Esto garantiza siempre enviar un array válido
-      requirements_list_rejected: (requirementsListRejected ?? []).length > 0
-      ? JSON.stringify(requirementsListRejected)
-      : "[]", 
-      status
-  }
-  console.log('===============================================')
-  console.log('===============================================')
-  console.log({requirementsListRejected, inputs});
-  console.log('===============================================')
-  console.log('===============================================')
   try {
     const payload: any = {
       user: projectClient || "frontend-app",
-      inputs,
+      inputs: {
+        project_id: projectId,
+        project_title: projectTitle,
+        project_description: projectDescription,
+        project_client: projectClient,
+        meeting_id: meetingId,
+        meeting_title: meetingTitle,
+        meeting_description: meetingDescription,
+        meeting_transcription: meetingTranscription,
+        requirements_list: requirementsList.length > 0
+          ? JSON.stringify(requirementsList)
+          : "[]",  // <- Esto garantiza siempre enviar un array válido
+          requirements_list_rejected: (requirementsListRejected ?? []).length > 0
+          ? JSON.stringify(requirementsListRejected)
+          : "[]", 
+          status
+      },
     };
 
     const res = await fetch("/api/workflow", {

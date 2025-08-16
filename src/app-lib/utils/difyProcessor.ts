@@ -16,6 +16,7 @@ interface ProcessDifyParams {
   meetingDescription: string;
   meetingTranscription: string;
   requirementsList: Requirement[];
+  onShowModal?: (requirements: Requirement[], meetingTitle: string) => void;
 }
 
 function mapStatus(value: string): Status {
@@ -41,6 +42,7 @@ export async function processDifyWorkflow({
   meetingDescription,
   meetingTranscription,
   requirementsList,
+  onShowModal,
 }: ProcessDifyParams) {
   try {
     const wfResp = await callDifyWorkflow(
@@ -140,7 +142,68 @@ export async function processDifyWorkflow({
         })
       );
     }
+
+    if (onShowModal && (updatedRequirementsList.length > 0 || newRequirementsList.length > 0)) {
+      const requirementsWithIds = [
+        ...updatedRequirementsList,
+        ...newRequirementsList.map((requirement, index) => ({
+          ...requirement,
+          id: `temp_${Date.now()}_${index}`
+        }))
+      ];
+      
+      onShowModal(requirementsWithIds, meetingTitle);
+    }
+
   } catch (err) {
     console.error("❌ Error en processDifyWorkflow:", err);
+  }
+}
+
+export async function sendSelectedRequirements(
+  dispatch: AppDispatch,
+  projectId: string,
+  meetingId: string,
+  selectedRequirements: Requirement[]
+) {
+  try {
+    
+    for (const requirement of selectedRequirements) {
+      if (requirement.id && requirement.id.startsWith('temp_')) {
+        await dispatch(
+          createRequirement({
+            projectId,
+            title: requirement.title,
+            description: requirement.description,
+            priority: requirement.priority ?? Priority.MEDIUM,
+            status: mapStatus(requirement.status),
+            responsible: requirement.responsible || "",
+            origin: requirement.origin || "Dify",
+            reason: requirement.reason || "",
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          })
+        );
+      } else {
+        await dispatch(
+          updateRequirement({
+            id: requirement.id,
+            updatedData: {
+              title: requirement.title,
+              description: requirement.description,
+              priority: requirement.priority as Priority,
+              status: mapStatus(requirement.status),
+              responsible: requirement.responsible || "",
+              origin: requirement.origin || "Dify",
+              reason: requirement.reason || "",
+              updatedAt: new Date().toISOString(),
+            },
+          })
+        );
+      }
+    }
+    
+  } catch (error) {
+    console.error({error});
   }
 }

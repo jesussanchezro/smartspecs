@@ -146,11 +146,11 @@ export async function processDifyWorkflow({
     if (onShowModal && (updatedRequirementsList.length > 0 || newRequirementsList.length > 0)) {
       const requirementsWithIds = [
         ...updatedRequirementsList,
-        ...newRequirementsList.map((requirement, index) => ({
-          ...requirement,
-          id: `temp_${Date.now()}_${index}`
-        }))
-      ];
+        ...newRequirementsList
+      ].map((requeriment, index) => ({
+        ...requeriment,
+        id: index.toString()
+      }))
       
       onShowModal(requirementsWithIds, meetingTitle);
     }

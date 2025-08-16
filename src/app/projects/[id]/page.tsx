@@ -18,7 +18,7 @@ import { useProjectData } from "@/smartspecs/app-lib/hooks/projects/useProjectDa
 import { useProjectDetail } from "@/smartspecs/app-lib/hooks/projects/useProjectDetail";
 import { Requirement } from "@/smartspecs/app-lib/interfaces/requirement";
 import { useRouter } from 'next/navigation';
-import { sendSelectedRequirements } from "@/smartspecs/app-lib/utils/difyProcessor";
+import { processDifyWorkflow } from "@/smartspecs/app-lib/utils/difyProcessor";
 import { useAppDispatch } from "@/smartspecs/app-lib/hooks/useAppDispatch";
 
 const ProjectDetail: React.FC = () => {
@@ -50,10 +50,17 @@ const ProjectDetail: React.FC = () => {
 
   const [showCopySuccess, setShowCopySuccess] = useState(false);
   const [isMeetingProcessing, setIsMeetingProcessing] = useState(false);
+  const [isRequirementsProcessing, setIsRequirementsProcessing] = useState(false);
   const [showRequirementModal, setShowRequirementModal] = useState(false);
   const [showRequirementsSelectionModal, setShowRequirementsSelectionModal] = useState(false);
   const [requirementsToProcess, setRequirementsToProcess] = useState<Requirement[]>([]);
   const [meetingTitleForModal, setMeetingTitleForModal] = useState("");
+  const [meetingInfoForModal, setMeetingInfoForModal] = useState({
+    meetingId: "",
+    meetingTitle: "",
+    meetingDescription: "",
+    meetingTranscription: ""
+  });
 
   const handleCopyRequirements = () => {
     const requirementsText = requirements.map(req => {
@@ -84,16 +91,51 @@ const ProjectDetail: React.FC = () => {
     setShowRequirementModal(false);
   };
 
-  const handleShowRequirementsModal = (requirements: Requirement[], meetingTitle: string) => {
+  const handleShowRequirementsModal = (
+    requirements: Requirement[], 
+    meetingTitle: string,
+    meetingId: string = "",
+    meetingDescription: string = "",
+    meetingTranscription: string = ""
+  ) => {
     setRequirementsToProcess(requirements);
     setMeetingTitleForModal(meetingTitle);
+    setMeetingInfoForModal({
+      meetingId,
+      meetingTitle,
+      meetingDescription,
+      meetingTranscription
+    });
     setShowRequirementsSelectionModal(true);
   };
 
   const handleSendSelectedRequirements = async (selectedRequirements: Requirement[]) => {
     if (project?.id) {
-      await sendSelectedRequirements(dispatch, project.id, "", selectedRequirements);
-      setShowRequirementsSelectionModal(false);
+      const unselectedRequirements = requirementsToProcess.filter(
+        requirement => !selectedRequirements.some(selected => selected.id === requirement.id)
+      );
+      
+      setIsRequirementsProcessing(true);
+      
+      try {
+        await processDifyWorkflow({
+          dispatch,
+          projectId: project.id,
+          meetingId: meetingInfoForModal.meetingId,
+          projectTitle: project.title,
+          projectDescription: project.description,
+          projectClient: project.client,
+          meetingTitle: meetingInfoForModal.meetingTitle,
+          meetingDescription: meetingInfoForModal.meetingDescription,
+          meetingTranscription: meetingInfoForModal.meetingTranscription,
+          requirementsList: selectedRequirements,
+          requirementsListRejected: unselectedRequirements,
+          onShowModal: handleShowRequirementsModal,
+          status: "updated"
+        });
+      } finally {
+        setIsRequirementsProcessing(false);
+      }
     }
   };
 
@@ -107,6 +149,10 @@ const ProjectDetail: React.FC = () => {
 
   if (isMeetingProcessing) {
     return <LoadingSpinner title="Processing meeting..." subtitle="This may take a moment" />;
+  }
+
+  if (isRequirementsProcessing) {
+    return <LoadingSpinner title="Processing requirements..." subtitle="This may take a moment" />;
   }
 
   if (error || meetingsError || requirementsError) {

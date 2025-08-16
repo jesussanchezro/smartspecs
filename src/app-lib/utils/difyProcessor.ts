@@ -16,7 +16,15 @@ interface ProcessDifyParams {
   meetingDescription: string;
   meetingTranscription: string;
   requirementsList: Requirement[];
-  onShowModal?: (requirements: Requirement[], meetingTitle: string) => void;
+  requirementsListRejected?: Requirement[];
+  onShowModal?: (
+    requirements: Requirement[], 
+    meetingTitle: string,
+    meetingId: string,
+    meetingDescription: string,
+    meetingTranscription: string
+  ) => void;
+  status: "new" | "updated";
 }
 
 function mapStatus(value: string): Status {
@@ -42,7 +50,9 @@ export async function processDifyWorkflow({
   meetingDescription,
   meetingTranscription,
   requirementsList,
+  requirementsListRejected,
   onShowModal,
+  status
 }: ProcessDifyParams) {
   try {
     const wfResp = await callDifyWorkflow(
@@ -54,7 +64,9 @@ export async function processDifyWorkflow({
       meetingTitle,
       meetingDescription,
       meetingTranscription,
-      requirementsList
+      requirementsList,
+      requirementsListRejected || [],
+      status
     );
 
     const updatedRequirementsList = wfResp?.updatedRequirementsList ?? [];
@@ -152,25 +164,10 @@ export async function processDifyWorkflow({
         id: index.toString()
       }))
       
-      onShowModal(requirementsWithIds, meetingTitle);
+      onShowModal(requirementsWithIds, meetingTitle, meetingId, meetingDescription, meetingTranscription);
     }
 
   } catch (err) {
     console.error("❌ Error en processDifyWorkflow:", err);
-  }
-}
-
-export async function sendSelectedRequirements(
-  dispatch: AppDispatch,
-  projectId: string,
-  meetingId: string,
-  selectedRequirements: Requirement[]
-) {
-  try {
-    
-    //TODO: Enviar todos los requerimientos seleccionados y rechazados
-    
-  } catch (error) {
-    console.error({error});
   }
 }

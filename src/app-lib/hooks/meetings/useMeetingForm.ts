@@ -9,7 +9,7 @@ import {
   getMeetingsByProject,
 } from "@/smartspecs/app-lib/redux/slices/MeetingsSlice";
 import { Meeting } from "@/smartspecs/app-lib/interfaces/meeting";
-import { processDifyWorkflow, sendSelectedRequirements } from "@/smartspecs/app-lib/utils/difyProcessor";
+import { processDifyWorkflow } from "@/smartspecs/app-lib/utils/difyProcessor";
 import { Requirement } from "@/smartspecs/app-lib/interfaces/requirement";
 import { toast } from "react-toastify";
 
@@ -23,7 +23,13 @@ interface UseMeetingFormProps {
   onSaveSuccess?: () => void;
   onCancel: () => void;
   onProcessingStart?: () => void; // Nueva función para notificar cuando comienza el procesamiento
-  onShowRequirementsModal?: (requirements: any[], meetingTitle: string) => void;
+  onShowRequirementsModal?: (
+    requirements: any[], 
+    meetingTitle: string,
+    meetingId: string,
+    meetingDescription: string,
+    meetingTranscription: string
+  ) => void;
 }
 
 export const useMeetingForm = ({
@@ -210,7 +216,10 @@ export const useMeetingForm = ({
             meetingDescription: description,
             meetingTranscription: transcription,
             requirementsList: requirementsList as Requirement[],
-            onShowModal: onShowRequirementsModal,
+            onShowModal: onShowRequirementsModal ? 
+              (requirements: any[], meetingTitle: string) => 
+                onShowRequirementsModal(requirements, meetingTitle, createdMeeting.id, description, transcription)
+              : undefined,
             status: "new"
           });
 

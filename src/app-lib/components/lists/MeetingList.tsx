@@ -36,7 +36,7 @@ const MeetingList: React.FC<Props> = ({ meetings }) => {
             </th>
           </tr>
         </thead>
-        <tbody className="bg-white divide-y divide-gray-200 max-h-96 overflow-y-auto">
+        <tbody className="bg-white divide-y divide-gray-200">
           {sortedMeetings.map((m) => (
             <tr key={m.id} className="hover:bg-gray-50 transition-colors duration-150">
               <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">

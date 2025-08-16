@@ -169,7 +169,6 @@ export async function sendSelectedRequirements(
   try {
     
     for (const requirement of selectedRequirements) {
-      if (requirement.id && requirement.id.startsWith('temp_')) {
         await dispatch(
           createRequirement({
             projectId,
@@ -184,23 +183,6 @@ export async function sendSelectedRequirements(
             updatedAt: new Date().toISOString(),
           })
         );
-      } else {
-        await dispatch(
-          updateRequirement({
-            id: requirement.id,
-            updatedData: {
-              title: requirement.title,
-              description: requirement.description,
-              priority: requirement.priority as Priority,
-              status: mapStatus(requirement.status),
-              responsible: requirement.responsible || "",
-              origin: requirement.origin || "Dify",
-              reason: requirement.reason || "",
-              updatedAt: new Date().toISOString(),
-            },
-          })
-        );
-      }
     }
     
   } catch (error) {

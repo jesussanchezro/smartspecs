@@ -16,10 +16,12 @@ import RequirementList from "@/smartspecs/app-lib/components/lists/requirements-
 import RequirementSelectionModal from "@/smartspecs/app-lib/components/modals/RequirementSelectionModal";
 import { useProjectData } from "@/smartspecs/app-lib/hooks/projects/useProjectData";
 import { useProjectDetail } from "@/smartspecs/app-lib/hooks/projects/useProjectDetail";
-import { Requirement } from "@/smartspecs/app-lib/interfaces/requirement";
+import { Requirement, Status } from "@/smartspecs/app-lib/interfaces/requirement";
 import { useRouter } from 'next/navigation';
 import { processDifyWorkflow } from "@/smartspecs/app-lib/utils/difyProcessor";
 import { useAppDispatch } from "@/smartspecs/app-lib/hooks/useAppDispatch";
+import { updateRequirement, createRequirement } from "@/smartspecs/app-lib/redux/slices/RequirementsSlice";
+import { toast } from "react-toastify";
 
 const ProjectDetail: React.FC = () => {
   // Este hook se encarga de cargar datos: proyecto, reuniones, requerimientos
@@ -118,21 +120,93 @@ const ProjectDetail: React.FC = () => {
       setIsRequirementsProcessing(true);
       
       try {
-        await processDifyWorkflow({
-          dispatch,
-          projectId: project.id,
-          meetingId: meetingInfoForModal.meetingId,
-          projectTitle: project.title,
-          projectDescription: project.description,
-          projectClient: project.client,
-          meetingTitle: meetingInfoForModal.meetingTitle,
-          meetingDescription: meetingInfoForModal.meetingDescription,
-          meetingTranscription: meetingInfoForModal.meetingTranscription,
-          requirementsList: selectedRequirements,
-          requirementsListRejected: unselectedRequirements,
-          onShowModal: handleShowRequirementsModal,
-          status: "updated"
-        });
+        // 1. PROCESAR REQUERIMIENTOS EXISTENTES (ID alfanumérico)
+        for (const requirement of selectedRequirements) {
+          if (!isNaN(parseInt(requirement.id))) {
+            await dispatch(updateRequirement({
+              id: requirement.id,
+              updatedData: {
+                status: Status.DONE, // Cambiar a DONE (aprobado)
+                reason: "Selected and approved for Dify processing",
+                origin: "Manual Selection"
+              },
+              historyReason: `Status changed from ${requirement.status} to DONE - Selected for Dify`
+            }));
+          }
+        }
+      
+
+        // 2. PROCESAR REQUERIMIENTOS NO SELECCIONADOS EXISTENTES
+        for (const requirement of unselectedRequirements) {
+          if (!isNaN(parseInt(requirement.id))) {
+            await dispatch(updateRequirement({
+              id: requirement.id,
+              updatedData: {
+                status: Status.REJECTED,
+                reason: "Not selected for Dify processing",
+                origin: "Manual Selection"
+              },
+              historyReason: `Status changed from PENDING to REJECTED - Not selected for Dify`
+            }));
+          }
+        }
+
+        for (const requirement of unselectedRequirements) {
+          if (!isNaN(parseInt(requirement.id))) {
+            await dispatch(createRequirement({
+              projectId: project.id,
+              title: requirement.title,
+              description: requirement.description,
+              priority: requirement.priority || "medium",
+              status: Status.REJECTED, // Crear como rechazado
+              responsible: requirement.responsible || "",
+              reason: "Not selected for Dify processing - Auto-created as rejected",
+              origin: "Manual Selection - Auto-created",
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString()
+            }));
+          }
+        }
+
+        for (const requirement of selectedRequirements) {
+          if (!isNaN(parseInt(requirement.id))) {
+            await dispatch(createRequirement({
+              projectId: project.id,
+              title: requirement.title,
+              description: requirement.description,
+              priority: requirement.priority || "medium",
+              status: Status.DONE,
+              responsible: requirement.responsible || "",
+              reason: "Selected and approved for Dify processing - Auto-created as approved",
+              origin: "Manual Selection - Auto-created",
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString()
+            }));
+          }
+        }
+
+        const existingSelectedRequirements = selectedRequirements.filter(requirement => 
+          !isNaN(parseInt(requirement.id))
+        );
+        
+        if (existingSelectedRequirements.length > 0) {
+          await processDifyWorkflow({
+            dispatch,
+            projectId: project.id,
+            meetingId: meetingInfoForModal.meetingId,
+            projectTitle: project.title,
+            projectDescription: project.description,
+            projectClient: project.client,
+            meetingTitle: meetingInfoForModal.meetingTitle,
+            meetingDescription: meetingInfoForModal.meetingDescription,
+            meetingTranscription: meetingInfoForModal.meetingTranscription,
+            requirementsList: existingSelectedRequirements,
+            requirementsListRejected: unselectedRequirements.filter(requirement => !isNaN(parseInt(requirement.id))),
+            onShowModal: handleShowRequirementsModal,
+            status: "updated"
+          });
+        }
+
       } finally {
         setIsRequirementsProcessing(false);
       }

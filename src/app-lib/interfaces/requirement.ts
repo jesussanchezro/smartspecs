@@ -2,6 +2,7 @@ export enum Status {
     IN_PROGRESS = "in progress",
     DONE = "done",
     PENDING = "pending",
+    REJECTED = "rejected",
 }
 
 export enum Priority {

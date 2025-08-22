@@ -161,7 +161,7 @@ export async function processDifyWorkflow({
         ...newRequirementsList
       ].map((requeriment, index) => ({
         ...requeriment,
-        id: index.toString()
+        id: requeriment.id ?? ((index*-1)-1).toString()
       }))
       
       onShowModal(requirementsWithIds, meetingTitle, meetingId, meetingDescription, meetingTranscription);

@@ -60,6 +60,18 @@ const RequirementForm: React.FC<RequirementFormProps> = ({
       } else {
         // Create new requirement
         const now = new Date().toISOString();
+        console.log({
+          projectId,
+          title,
+          description,
+          priority,
+          status,
+          responsible,
+          reason,
+          origin: origin || "Manual",
+          createdAt: now,
+          updatedAt: now
+        })
         await dispatch(createRequirement({
           projectId,
           title,

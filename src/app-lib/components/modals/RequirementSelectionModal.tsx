@@ -156,7 +156,6 @@ const RequirementSelectionModal: React.FC<RequirementSelectionModalProps> = ({
               <div
                 key={requirement.id}
                 className="flex items-start space-x-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
-                onClick={() => handleRequirementToggle(requirement.id)}
               >
                 <input
                   type="checkbox"
@@ -167,7 +166,9 @@ const RequirementSelectionModal: React.FC<RequirementSelectionModalProps> = ({
                   }}
                   className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500 mt-1 cursor-pointer"
                 />
-                <div className="flex-1">
+                <div className="flex-1"
+                  onClick={() => handleRequirementToggle(requirement.id)}
+                >
                   <h3 className="font-medium text-gray-900">{requirement.title}</h3>
                   <p className="text-sm text-gray-600 mt-1">{requirement.description}</p>
                   <div className="flex space-x-2 mt-2">

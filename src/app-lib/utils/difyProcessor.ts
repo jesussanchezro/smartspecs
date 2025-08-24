@@ -111,9 +111,8 @@ export async function processDifyWorkflow({
       );
 
       const historyRef = doc(collection(firestore, "requirements", updated.id, "history"));
-      await setDoc(historyRef, {
-        id: historyRef.id, // (opcional pero útil si querés guardar también el ID del historial)
-        requirementId: updated.id, // ⬅️ Esta es la línea clave
+      await setDoc(historyRef, {// (opcional pero útil si querés guardar también el ID del historial)
+        requirementId: updated.id,
         changedAt: Timestamp.now(),
         meetingId,
         origin: updated.origin || "Dify",
@@ -134,37 +133,31 @@ export async function processDifyWorkflow({
     }
 
     for (const req of newRequirementsList) {
-      if (!req.title || !req.description) {
-        console.warn("⚠️ Requerimiento nuevo incompleto:", req);
-        continue;
-      }
 
-      await dispatch(
+      const newRequirementResult = await dispatch(
         createRequirement({
           projectId,
           title: req.title,
           description: req.description,
           priority: req.priority ?? Priority.MEDIUM,
-          status: mapStatus(req.status),
-          responsible: req.responsible || "",
+          status: Status.PENDING,
+          responsible: req.responsible,
           origin: req.origin || "Dify",
-          reason: req.reason || "",
+          reason: req.reason,
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
         })
       );
+
+      if (newRequirementResult.payload) {
+        req.id = (newRequirementResult.payload as any).id;
+      }
     }
 
     if (onShowModal && (updatedRequirementsList.length > 0 || newRequirementsList.length > 0)) {
-      const requirementsWithIds = [
-        ...updatedRequirementsList,
-        ...newRequirementsList
-      ].map((requeriment, index) => ({
-        ...requeriment,
-        id: requeriment.id ?? ((index*-1)-1).toString()
-      }))
+      const allRequirements = [...updatedRequirementsList, ...newRequirementsList];
       
-      onShowModal(requirementsWithIds, meetingTitle, meetingId, meetingDescription, meetingTranscription);
+      onShowModal(allRequirements, meetingTitle, meetingId, meetingDescription, meetingTranscription);
     }
 
   } catch (err) {

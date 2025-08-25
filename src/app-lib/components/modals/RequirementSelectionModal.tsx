@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Requirement, Status } from "@/smartspecs/app-lib/interfaces/requirement";
+import { useAppDispatch } from "@/smartspecs/app-lib/hooks/useAppDispatch";
+import { updateRequirement } from "@/smartspecs/app-lib/redux/slices/RequirementsSlice";
 
 interface RequirementSelectionModalProps {
   isOpen: boolean;
@@ -16,9 +18,11 @@ const RequirementSelectionModal: React.FC<RequirementSelectionModalProps> = ({
   requirements,
   onSend,
 }) => {
+  const dispatch = useAppDispatch();
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [selectAll, setSelectAll] = useState(false);
   const [activeTab, setActiveTab] = useState<'pending' | 'approved' | 'rejected'>('pending');
+  const [isProcessing, setIsProcessing] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
@@ -70,10 +74,42 @@ const RequirementSelectionModal: React.FC<RequirementSelectionModalProps> = ({
     });
   };
 
-  const handleSend = () => {
-    const selectedRequirements = requirements.filter(req => selectedIds.includes(req.id));
-    onSend(selectedRequirements);
-    onClose();
+  const handleSend = async () => {
+    try {
+      setIsProcessing(true);      
+      const unselectedRequirements = requirements
+        .filter(requirement => !selectedIds.includes(requirement.id));
+
+      for (const requirement of unselectedRequirements) {
+        await dispatch(updateRequirement({
+          id: requirement.id,
+          updatedData: { 
+            status: Status.REJECTED,
+            responsible: 'human'
+          }
+        }));
+      }
+      
+
+      const selectedRequirements = requirements
+        .filter(requirement => selectedIds.includes(requirement.id));
+      for (const requirement of selectedRequirements) {
+        await dispatch(updateRequirement({
+          id: requirement.id,
+          updatedData: { 
+            status: Status.DONE,
+            responsible: 'human'
+          }
+        }));
+      }
+      
+      onSend(selectedRequirements);
+      onClose();
+    } catch (error) {
+      console.error({error});
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   if (!isOpen) return null;
@@ -197,10 +233,10 @@ const RequirementSelectionModal: React.FC<RequirementSelectionModalProps> = ({
           </button>
           <button
             onClick={handleSend}
-            disabled={selectedIds.length === 0}
+            disabled={selectedIds.length === 0 || isProcessing}
             className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
-            Send Selected ({selectedIds.length})
+            {isProcessing ? "Processing..." : `Send Selected (${selectedIds.length})`}
           </button>
         </div>
       </div>

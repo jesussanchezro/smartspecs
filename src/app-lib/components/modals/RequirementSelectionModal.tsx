@@ -77,6 +77,8 @@ const RequirementSelectionModal: React.FC<RequirementSelectionModalProps> = ({
   const handleSend = async () => {
     try {
       setIsProcessing(true);      
+      
+      // 1. ACTUALIZAR REQUERIMIENTOS NO SELECCIONADOS COMO RECHAZADOS
       const unselectedRequirements = requirements
         .filter(requirement => !selectedIds.includes(requirement.id));
 
@@ -90,7 +92,7 @@ const RequirementSelectionModal: React.FC<RequirementSelectionModalProps> = ({
         }));
       }
       
-
+      // 2. ACTUALIZAR REQUERIMIENTOS SELECCIONADOS COMO APROBADOS
       const selectedRequirements = requirements
         .filter(requirement => selectedIds.includes(requirement.id));
       for (const requirement of selectedRequirements) {
@@ -103,6 +105,7 @@ const RequirementSelectionModal: React.FC<RequirementSelectionModalProps> = ({
         }));
       }
       
+      // 3. ENVIAR SOLO LOS SELECCIONADOS AL FLUJO DE DIFY
       onSend(selectedRequirements);
       onClose();
     } catch (error) {

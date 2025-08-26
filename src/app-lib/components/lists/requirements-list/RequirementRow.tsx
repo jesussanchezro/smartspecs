@@ -156,18 +156,23 @@ const RequirementRow: React.FC<RequirementRowProps> = ({
             <option value={Status.IN_PROGRESS}>In Progress</option>
             <option value={Status.DONE}>Done</option>
             <option value={Status.PENDING}>Pending</option>
+            <option value={Status.REJECTED}>Rejected</option>
           </select>
         ) : (
           <span className={`inline-flex items-center px-2 py-0.5 rounded-full font-medium ${requirement.status === Status.DONE
               ? 'bg-green-100 text-green-800'
               : requirement.status === Status.IN_PROGRESS
                 ? 'bg-blue-100 text-blue-800'
-                : 'bg-red-100 text-red-800'
+                : requirement.status === Status.REJECTED
+                ? 'bg-red-100 text-red-800'
+                : 'bg-orange-100 text-orange-800'
             }`}>
             {requirement.status === Status.DONE
               ? 'Done'
               : requirement.status === Status.IN_PROGRESS
                 ? 'In Progress'
+                : requirement.status === Status.REJECTED
+                ? 'Rejected'
                 : 'Pending'}
           </span>
         )}
@@ -190,11 +195,22 @@ const RequirementRow: React.FC<RequirementRowProps> = ({
 
       {/* Origen */}
       <td className="px-2 py-2 text-gray-700">
-        {requirement.origin || <span className="italic text-gray-400">Not registered</span>}
+        {requirement.origin ? (
+          <div className="flex items-center space-x-2">
+            <i className={`text-lg ${
+              requirement.origin === 'Dify' 
+                ? 'fas fa-robot text-green-600' 
+                : 'fas fa-user text-blue-600'
+            }`}></i>
+            <span className="capitalize">{requirement.origin}</span>
+          </div>
+        ) : (
+          <span className="italic text-gray-400">Not registered</span>
+        )}
       </td>
 
       {/* Razón */}
-      <td className="px-2 py-2 text-gray-700 tooltip-container">
+      <td className="px-2 py-2 text-gray-700">
         {requirement.reason ? (
           <div 
             ref={iconRef}
@@ -202,9 +218,7 @@ const RequirementRow: React.FC<RequirementRowProps> = ({
             onMouseEnter={() => setShowTooltip(true)}
             onMouseLeave={() => setShowTooltip(false)}
           >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
+            <i className="fas fa-info-circle h-5 w-5"></i>
           </div>
         ) : (
           <span className="italic text-gray-400">No reason</span>
@@ -219,13 +233,13 @@ const RequirementRow: React.FC<RequirementRowProps> = ({
               } transition-all`}
             onClick={onEditClick}
           >
-            {isEditing ? "💾" : "✏️"}
+            {isEditing ? <i className="fas fa-save"></i> : <i className="fas fa-edit"></i>}
           </button>
           <button
             className="px-2 py-1 bg-red-400 hover:bg-red-500 text-white rounded-md text-sm font-medium transition-all"
             onClick={onDeleteClick}
           >
-            🗑️
+            <i className="fas fa-trash"></i>
           </button>
         </div>
       </td>

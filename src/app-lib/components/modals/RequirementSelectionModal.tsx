@@ -32,12 +32,10 @@ const RequirementSelectionModal: React.FC<RequirementSelectionModalProps> = ({
     }
   }, [isOpen]);
 
-  // Filtrar requerimientos por estado
   const pendingRequirements = requirements.filter(req => req.status === Status.PENDING);
   const approvedRequirements = requirements.filter(req => req.status === Status.DONE);
   const rejectedRequirements = requirements.filter(req => req.status === Status.REJECTED);
 
-  // Obtener requerimientos del tab activo
   const getActiveRequirements = () => {
     switch (activeTab) {
       case 'pending': return pendingRequirements;
@@ -78,21 +76,22 @@ const RequirementSelectionModal: React.FC<RequirementSelectionModalProps> = ({
     try {
       setIsProcessing(true);      
       
-      // 1. ACTUALIZAR REQUERIMIENTOS NO SELECCIONADOS COMO RECHAZADOS
       const unselectedRequirements = requirements
-        .filter(requirement => !selectedIds.includes(requirement.id));
+        .filter(requirement =>
+              requirement.status === Status.PENDING
+              && !selectedIds.includes(requirement.id)
+        );
 
       for (const requirement of unselectedRequirements) {
         await dispatch(updateRequirement({
           id: requirement.id,
           updatedData: { 
             status: Status.REJECTED,
-            responsible: 'human'
+            origin: 'human'
           }
         }));
       }
       
-      // 2. ACTUALIZAR REQUERIMIENTOS SELECCIONADOS COMO APROBADOS
       const selectedRequirements = requirements
         .filter(requirement => selectedIds.includes(requirement.id));
       for (const requirement of selectedRequirements) {
@@ -100,12 +99,11 @@ const RequirementSelectionModal: React.FC<RequirementSelectionModalProps> = ({
           id: requirement.id,
           updatedData: { 
             status: Status.DONE,
-            responsible: 'human'
+            origin: 'human'
           }
         }));
       }
       
-      // 3. ENVIAR SOLO LOS SELECCIONADOS AL FLUJO DE DIFY
       onSend(selectedRequirements);
       onClose();
     } catch (error) {
@@ -169,8 +167,8 @@ const RequirementSelectionModal: React.FC<RequirementSelectionModalProps> = ({
           </button>
         </div>
 
-        {/* Select All solo si hay requerimientos */}
-        {activeRequirements.length > 0 && (
+        {/* Select All solo en la pestaña "pending" */}
+        {activeTab === 'pending' && activeRequirements.length > 0 && (
           <div className="mb-4">
             <label className="flex items-center space-x-2 cursor-pointer">
               <input
@@ -194,19 +192,29 @@ const RequirementSelectionModal: React.FC<RequirementSelectionModalProps> = ({
             activeRequirements.map((requirement) => (
               <div
                 key={requirement.id}
-                className="flex items-start space-x-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
+                className={`flex items-start space-x-3 p-3 border border-gray-200 rounded-lg transition-colors ${
+                  activeTab === 'pending' 
+                    ? 'hover:bg-gray-50 cursor-pointer' 
+                    : ''
+                }`}
               >
-                <input
-                  type="checkbox"
-                  checked={selectedIds.includes(requirement.id)}
-                  onChange={(e) => {
-                    e.stopPropagation();
-                    handleRequirementToggle(requirement.id);
-                  }}
-                  className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500 mt-1 cursor-pointer"
-                />
-                <div className="flex-1"
-                  onClick={() => handleRequirementToggle(requirement.id)}
+                {activeTab === 'pending' ? (
+                  <input
+                    type="checkbox"
+                    checked={selectedIds.includes(requirement.id)}
+                    onChange={(e) => {
+                      e.stopPropagation();
+                      handleRequirementToggle(requirement.id);
+                    }}
+                    className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500 mt-1 cursor-pointer"
+                  />
+                ) : (
+                  <div className="w-4"></div>
+                )}
+                
+                <div 
+                  className={`flex-1 ${activeTab === 'pending' ? 'cursor-pointer' : ''}`}
+                  onClick={activeTab === 'pending' ? () => handleRequirementToggle(requirement.id) : undefined}
                 >
                   <h3 className="font-medium text-gray-900">{requirement.title}</h3>
                   <p className="text-sm text-gray-600 mt-1">{requirement.description}</p>
@@ -219,6 +227,16 @@ const RequirementSelectionModal: React.FC<RequirementSelectionModalProps> = ({
                         : 'bg-green-100 text-green-800'
                     }`}>
                       {requirement.priority}
+                    </span>
+                    {/* Mostrar el estado del requerimiento */}
+                    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                      requirement.status === Status.DONE 
+                        ? 'bg-green-100 text-green-800' 
+                        : requirement.status === Status.REJECTED
+                        ? 'bg-red-100 text-red-800'
+                        : 'bg-orange-100 text-orange-800'
+                    }`}>
+                      {requirement.status}
                     </span>
                   </div>
                 </div>
@@ -234,13 +252,16 @@ const RequirementSelectionModal: React.FC<RequirementSelectionModalProps> = ({
           >
             Cancel
           </button>
-          <button
-            onClick={handleSend}
-            disabled={selectedIds.length === 0 || isProcessing}
-            className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          >
-            {isProcessing ? "Processing..." : `Send Selected (${selectedIds.length})`}
-          </button>
+          {/* Solo mostrar el botón "Send Selected" en la pestaña "pending" */}
+          {activeTab === 'pending' && (
+            <button
+              onClick={handleSend}
+              disabled={selectedIds.length === 0 || isProcessing}
+              className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              {isProcessing ? "Processing..." : `Send Selected (${selectedIds.length})`}
+            </button>
+          )}
         </div>
       </div>
     </div>

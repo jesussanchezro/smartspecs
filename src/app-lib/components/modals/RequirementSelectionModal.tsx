@@ -133,7 +133,6 @@ const RequirementSelectionModal: React.FC<RequirementSelectionModalProps> = ({
           </button>
         </div>
 
-        {/* Pestañas */}
         <div className="flex space-x-1 mb-4 border-b border-gray-200">
           <button
             onClick={() => setActiveTab('pending')}
@@ -167,7 +166,6 @@ const RequirementSelectionModal: React.FC<RequirementSelectionModalProps> = ({
           </button>
         </div>
 
-        {/* Select All solo en la pestaña "pending" */}
         {activeTab === 'pending' && activeRequirements.length > 0 && (
           <div className="mb-4">
             <label className="flex items-center space-x-2 cursor-pointer">
@@ -182,7 +180,6 @@ const RequirementSelectionModal: React.FC<RequirementSelectionModalProps> = ({
           </div>
         )}
 
-        {/* Lista de requerimientos */}
         <div className="overflow-y-auto max-h-96 space-y-3">
           {activeRequirements.length === 0 ? (
             <div className="text-center py-8 text-gray-500">
@@ -228,7 +225,6 @@ const RequirementSelectionModal: React.FC<RequirementSelectionModalProps> = ({
                     }`}>
                       {requirement.priority}
                     </span>
-                    {/* Mostrar el estado del requerimiento */}
                     <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
                       requirement.status === Status.DONE 
                         ? 'bg-green-100 text-green-800' 
@@ -252,7 +248,6 @@ const RequirementSelectionModal: React.FC<RequirementSelectionModalProps> = ({
           >
             Cancel
           </button>
-          {/* Solo mostrar el botón "Send Selected" en la pestaña "pending" */}
           {activeTab === 'pending' && (
             <button
               onClick={handleSend}

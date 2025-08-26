@@ -106,8 +106,8 @@ export async function processDifyWorkflow({
       onShowModal(requirements, meetingTitle, meetingId, meetingDescription, meetingTranscription);
     }
 
-  } catch (err) {
-    console.error("❌ Error en processDifyWorkflow:", err);
+  } catch (error) {
+    console.error({error});
   }
 
 

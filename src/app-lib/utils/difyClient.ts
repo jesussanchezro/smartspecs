@@ -1,4 +1,5 @@
 import { Requirement } from "@/smartspecs/app-lib/interfaces/requirement";
+import axios from "axios";
 
 /**
  * Lanza el workflow de Dify con toda la info del proyecto y la reunión.
@@ -47,18 +48,12 @@ export async function callDifyWorkflow(
       },
     };
 
-    const res = await fetch("/api/workflow", {
-      method: "POST",
+    const res = await axios.post("/api/workflow", payload, {
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
+      timeout: 1800000// TODO: Buscar una forma de que no se quede colgado
     });
 
-    if (!res.ok) {
-      const txt = await res.text();
-      throw new Error(`❌ Workflow error: ${res.status} – ${txt}`);
-    }
-
-    const data = await res.json();
+    const data = res.data;
     console.log("✅ Dify workflow raw result:", data);
 
     const outputs = data.data?.outputs || {};

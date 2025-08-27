@@ -196,7 +196,8 @@ export const getRequirementsByProject = createAsyncThunk(
     try {
       const q = query(
         collection(firestore, "requirements"),
-        where("projectId", "==", projectId)
+        where("projectId", "==", projectId),
+        where("status", "==", Status.DONE)
       );
 
       const snap = await getDocs(q);
@@ -228,8 +229,9 @@ export const getRequirementsByProject = createAsyncThunk(
   }
 );
 
-export const loadRequirements = createAsyncThunk(
-  "requirements/loadRequirements",
+// Obtener TODOS los requerimientos por proyecto (para casos especiales)
+export const getAllRequirementsByProject = createAsyncThunk(
+  "requirements/getAllRequirementsByProject",
   async (projectId: string, { rejectWithValue }) => {
     try {      
       const q = query(

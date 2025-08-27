@@ -196,6 +196,44 @@ export const getRequirementsByProject = createAsyncThunk(
     try {
       const q = query(
         collection(firestore, "requirements"),
+        where("projectId", "==", projectId)
+      );
+
+      const snap = await getDocs(q);
+
+      const requirements = snap.docs.map((doc) => {
+        const data = doc.data();
+        const requirement = {
+          id: doc.id,
+          projectId: data.projectId || data.project_id,
+          title: data.title || "Untitled",
+          description: data.description || "",
+          priority: data.priority || "medium",
+          status: data.status || Status.IN_PROGRESS,
+          responsible: data.responsible || "",
+          reason: data.reason || "",
+          origin: data.origin || "Dify",
+          createdAt: toISODate(data.createdAt),
+          updatedAt: toISODate(data.updatedAt),
+        } as Requirement;
+
+        return RequirementAdapter.toApp(RequirementAdapter.toDomain(requirement));
+      });
+
+      return requirements;
+    } catch (error) {
+      console.error("Error fetching requirements:", error);
+      return rejectWithValue("Error al obtener requerimientos");
+    }
+  }
+);
+
+export const getApprovedRequirementsByProject = createAsyncThunk(
+  "requirements/getRequirementsByProject",
+  async (projectId: string, { rejectWithValue }) => {
+    try {
+      const q = query(
+        collection(firestore, "requirements"),
         where("projectId", "==", projectId),
         where("status", "==", Status.DONE)
       );

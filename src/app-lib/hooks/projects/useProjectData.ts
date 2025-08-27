@@ -8,7 +8,7 @@ import { usePathname } from "next/navigation";
 // Acciones de Redux
 import { getProject } from "@/smartspecs/app-lib/redux/slices/ProjectsSlice";
 import { getMeetingsByProject } from "@/smartspecs/app-lib/redux/slices/MeetingsSlice";
-import { getRequirementsByProject } from "@/smartspecs/app-lib/redux/slices/RequirementsSlice";
+import { getApprovedRequirementsByProject } from "@/smartspecs/app-lib/redux/slices/RequirementsSlice";
 
 import { Project } from "@/smartspecs/app-lib/interfaces/project";
 
@@ -41,14 +41,14 @@ export const useProjectData = () => {
         if (id) {
             dispatch(getProject(id));
             dispatch(getMeetingsByProject(id));
-            dispatch(getRequirementsByProject(id));
+            dispatch(getApprovedRequirementsByProject(id));
         }
     }, [id, dispatch]);
 
     // Si querés refrescar requerimientos cuando cambian las reuniones
     useEffect(() => {
         if (id) {
-            dispatch(getRequirementsByProject(id));
+            dispatch(getApprovedRequirementsByProject(id));
         }
     }, [meetings, id, dispatch]);
 

@@ -169,7 +169,8 @@ export const getProjects = createAsyncThunk(
           createdAt: toISODate(data.createdAt),
           updatedAt: toISODate(data.updatedAt),
         } as Project;
-      });
+      })
+      .sort((after, before) => new Date(before.createdAt).getTime() - new Date(after.createdAt).getTime());
     } catch (error) {
       console.error("Error al obtener proyectos:", error);
       return rejectWithValue("Error al obtener proyectos");

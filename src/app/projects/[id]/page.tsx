@@ -22,6 +22,7 @@ import { processDifyWorkflow } from "@/smartspecs/app-lib/utils/difyProcessor";
 import { useAppDispatch } from "@/smartspecs/app-lib/hooks/useAppDispatch";
 import { updateRequirement, createRequirement } from "@/smartspecs/app-lib/redux/slices/RequirementsSlice";
 import { toast } from "react-toastify";
+import { getApprovedRequirementsByProject } from "@/smartspecs/app-lib/redux/slices/RequirementsSlice";
 
 const ProjectDetail: React.FC = () => {
   // Este hook se encarga de cargar datos: proyecto, reuniones, requerimientos
@@ -135,6 +136,8 @@ const ProjectDetail: React.FC = () => {
           onShowModal: handleShowRequirementsModal,
           status: "updated"
         });
+
+        await dispatch(getApprovedRequirementsByProject(project.id));
       } finally {
         setIsRequirementsProcessing(false);
       }

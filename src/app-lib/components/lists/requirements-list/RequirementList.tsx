@@ -25,6 +25,7 @@ const RequirementList: React.FC<RequirementListProps> = ({ requirements }) => {
     setTempStatus,
     setTempResponsible,
     handleEditClick,
+    handleCancelEdit,
     handleDeleteClick,
     confirmDelete,
     cancelDelete,
@@ -83,6 +84,7 @@ const RequirementList: React.FC<RequirementListProps> = ({ requirements }) => {
                 onStatusChange={setTempStatus}
                 onResponsibleChange={setTempResponsible}
                 onEditClick={() => handleEditClick(requirement)}
+                onCancelEdit={handleCancelEdit}
                 onDeleteClick={() => handleDeleteClick(requirement.id)}
               />
 

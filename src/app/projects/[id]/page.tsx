@@ -148,8 +148,8 @@ const ProjectDetail: React.FC = () => {
     setShowMeetingModal(true);
   };
 
-  if (loading) {
-    return <LoadingSpinner />;
+  if (loading || !project) {
+    return <LoadingSpinner title="Loading project..." subtitle="Please wait" />;
   }
 
   if (isMeetingProcessing) {
@@ -205,15 +205,17 @@ const ProjectDetail: React.FC = () => {
           <ProjectInfo project={project} />
           <div className="flex justify-end gap-4 mt-4">
             <button
-              className="bg-primary text-white px-4 py-2 rounded"
+              className="bg-primary text-white px-4 py-2 rounded flex items-center gap-2"
               onClick={handleEdit}
             >
+              <i className="fas fa-edit"></i>
               Edit
             </button>
             <button
-              className="bg-green-500 text-white px-4 py-2 rounded"
+              className="bg-green-500 text-white px-4 py-2 rounded flex items-center gap-2"
               onClick={handleAddMeetingClick}
             >
+              <i className="fas fa-plus-square"></i>
               Add Meeting
             </button>
             <button
@@ -245,7 +247,10 @@ const ProjectDetail: React.FC = () => {
                   Deleting...
                 </>
               ) : (
-                "Delete Meetings"
+                <>
+                  <i className="fas fa-trash"></i>
+                  Delete Meetings
+                </>
               )}
             </button>
           </div>
@@ -302,21 +307,24 @@ const ProjectDetail: React.FC = () => {
               </span>
             )}
             <button
-              className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors"
+              className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors flex items-center gap-2"
               onClick={handleCopyRequirements}
             >
+              <i className="fas fa-copy"></i>
               Copy Requirements
             </button>
             <button
-              className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition-colors"
+              className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition-colors flex items-center gap-2"
               onClick={() => setShowRequirementModal(true)}
             >
+              <i className="fas fa-plus-square"></i>
               Add Requirement
             </button>
             <button
-              className="bg-purple-500 text-white px-4 py-2 rounded hover:bg-purple-600 transition-colors"
+              className="bg-purple-500 text-white px-4 py-2 rounded hover:bg-purple-600 transition-colors flex items-center gap-2"
               onClick={() => setShowRequirementsSelectionModal(true)}
             >
+              <i className="fas fa-check-square"></i>
               Select Requirements
             </button>
           </div>

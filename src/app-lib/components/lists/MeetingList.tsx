@@ -49,8 +49,9 @@ const MeetingList: React.FC<Props> = ({ meetings }) => {
                 <td className="px-6 py-4 whitespace-nowrap text-sm">
                   <Link
                     href={`/meetings/${m.id}`}
-                    className="inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-md text-primary bg-primary/10 hover:bg-primary/20 transition-colors duration-150"
+                    className="inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-md text-primary bg-primary/10 hover:bg-primary/20 transition-colors duration-150 gap-2"
                   >
+                    <i className="fas fa-eye"></i>
                     View details
                   </Link>
                 </td>

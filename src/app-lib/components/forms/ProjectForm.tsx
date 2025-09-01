@@ -45,12 +45,23 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ onCancel, project, onSaveSucc
         className="border border-primary p-2 w-full mb-2 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
         required
       />
-      <button
-        type="submit"
-        className="bg-primary text-background hover:bg-primary/80 p-3 w-full rounded-lg shadow-md transition"
-      >
-        {project ? "Update Project" : "Create Project"}
-      </button>
+      <div className="flex gap-3">
+        <button
+          type="button"
+          onClick={onCancel}
+          className="bg-gray-500 text-white hover:bg-gray-600 p-3 flex-1 rounded-lg shadow-md transition flex items-center justify-center gap-2"
+        >
+          <i className="fas fa-cancel"></i>
+          Cancel
+        </button>
+        <button
+          type="submit"
+          className="bg-primary text-background hover:bg-primary/80 p-3 flex-1 rounded-lg shadow-md transition flex items-center justify-center gap-2"
+        >
+          <i className="fas fa-save"></i>
+          {project ? "Update Project" : "Create Project"}
+        </button>
+      </div>
     </form>
   );
 };

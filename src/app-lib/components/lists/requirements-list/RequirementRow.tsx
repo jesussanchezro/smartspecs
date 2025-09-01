@@ -16,6 +16,7 @@ interface RequirementRowProps {
   onStatusChange: (value: Status) => void;
   onResponsibleChange: (value: string) => void;
   onEditClick: () => void;
+  onCancelEdit: () => void;
   onDeleteClick: () => void;
 }
 
@@ -34,6 +35,7 @@ const RequirementRow: React.FC<RequirementRowProps> = ({
   onStatusChange,
   onResponsibleChange,
   onEditClick,
+  onCancelEdit,
   onDeleteClick,
 }) => {
   const [showTooltip, setShowTooltip] = useState(false);
@@ -227,16 +229,29 @@ const RequirementRow: React.FC<RequirementRowProps> = ({
 
       {/* Acciones */}
       <td className="px-2 py-2">
-        <div className="flex items-center space-x-1">
+        <div className="inline-flex rounded-md shadow-sm" role="group">
           <button
-            className={`px-2 py-1 rounded-md text-sm font-medium ${isEditing ? 'bg-green-500 hover:bg-green-600 text-white' : 'bg-blue-500 hover:bg-blue-600 text-white'
-              } transition-all`}
+            className={`px-3 py-1.5 text-sm font-medium border transition-all ${
+              isEditing 
+                ? 'bg-green-500 hover:bg-green-600 text-white border-green-500' 
+                : 'bg-primary hover:bg-primary/90 text-white border-primary'
+            } ${isEditing ? 'rounded-l-md' : 'rounded-l-md'}`}
             onClick={onEditClick}
           >
             {isEditing ? <i className="fas fa-save"></i> : <i className="fas fa-edit"></i>}
           </button>
+          {isEditing && (
+            <button
+              className="px-3 py-1.5 bg-gray-500 hover:bg-gray-600 text-white text-sm font-medium border border-gray-500 transition-all"
+              onClick={onCancelEdit}
+            >
+              <i className="fas fa-cancel"></i>
+            </button>
+          )}
           <button
-            className="px-2 py-1 bg-red-400 hover:bg-red-500 text-white rounded-md text-sm font-medium transition-all"
+            className={`px-3 py-1.5 bg-red-500 hover:bg-red-600 text-white text-sm font-medium border border-red-500 transition-all ${
+              isEditing ? 'rounded-r-md' : 'rounded-r-md'
+            }`}
             onClick={onDeleteClick}
           >
             <i className="fas fa-trash"></i>

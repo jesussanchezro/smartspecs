@@ -244,16 +244,18 @@ const RequirementSelectionModal: React.FC<RequirementSelectionModalProps> = ({
         <div className="flex justify-end space-x-3 mt-6 pt-4 border-t border-gray-200">
           <button
             onClick={onClose}
-            className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors"
+            className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors flex items-center gap-2"
           >
+            <i className="fas fa-cancel"></i>
             Cancel
           </button>
           {activeTab === 'pending' && (
             <button
               onClick={handleSend}
               disabled={selectedIds.length === 0 || isProcessing}
-              className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
             >
+              <i className="fas fa-save"></i>
               {isProcessing ? "Processing..." : `Send Selected (${selectedIds.length})`}
             </button>
           )}

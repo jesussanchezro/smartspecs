@@ -158,12 +158,13 @@ const RequirementRow: React.FC<RequirementRowProps> = ({
             <option value={Status.IN_PROGRESS}>In Progress</option>
             <option value={Status.DONE}>Done</option>
             <option value={Status.PENDING}>Pending</option>
+            <option value={Status.TO_DO}>To Do</option>
             <option value={Status.REJECTED}>Rejected</option>
           </select>
         ) : (
           <span className={`inline-flex items-center px-2 py-0.5 rounded-full font-medium ${requirement.status === Status.DONE
               ? 'bg-green-100 text-green-800'
-              : requirement.status === Status.IN_PROGRESS
+              : requirement.status === Status.IN_PROGRESS || requirement.status === Status.TO_DO
                 ? 'bg-blue-100 text-blue-800'
                 : requirement.status === Status.REJECTED
                 ? 'bg-red-100 text-red-800'
@@ -173,6 +174,8 @@ const RequirementRow: React.FC<RequirementRowProps> = ({
               ? 'Done'
               : requirement.status === Status.IN_PROGRESS
                 ? 'In Progress'
+                : requirement.status === Status.TO_DO
+                ? 'To Do'
                 : requirement.status === Status.REJECTED
                 ? 'Rejected'
                 : 'Pending'}

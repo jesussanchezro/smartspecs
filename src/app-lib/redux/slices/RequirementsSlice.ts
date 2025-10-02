@@ -235,7 +235,7 @@ export const getApprovedRequirementsByProject = createAsyncThunk(
       const q = query(
         collection(firestore, "requirements"),
         where("projectId", "==", projectId),
-        where("status", "==", Status.TO_DO)
+        where("status", "in", [Status.TO_DO, Status.PENDING, Status.IN_PROGRESS, Status.DONE])
       );
 
       const snap = await getDocs(q);
@@ -256,9 +256,11 @@ export const getApprovedRequirementsByProject = createAsyncThunk(
           updatedAt: toISODate(data.updatedAt),
         } as Requirement;
 
+        
         return RequirementAdapter.toApp(RequirementAdapter.toDomain(requirement));
       });
 
+      console.log("requirements slice", requirements);
       return requirements;
     } catch (error) {
       console.error("Error fetching requirements:", error);

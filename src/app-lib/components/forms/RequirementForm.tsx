@@ -147,6 +147,7 @@ const RequirementForm: React.FC<RequirementFormProps> = ({
           >
             <option value={Status.PENDING}>Pending</option>
             <option value={Status.IN_PROGRESS}>In Progress</option>
+            <option value={Status.TO_DO}>To Do</option>
             <option value={Status.DONE}>Done</option>
           </select>
         </div>

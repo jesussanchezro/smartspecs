@@ -33,7 +33,7 @@ const RequirementSelectionModal: React.FC<RequirementSelectionModalProps> = ({
   }, [isOpen]);
 
   const pendingRequirements = requirements.filter(req => req.status === Status.PENDING);
-  const approvedRequirements = requirements.filter(req => req.status === Status.DONE);
+  const approvedRequirements = requirements.filter(req => req.status === Status.TO_DO);
   const rejectedRequirements = requirements.filter(req => req.status === Status.REJECTED);
 
   const getActiveRequirements = () => {
@@ -98,7 +98,7 @@ const RequirementSelectionModal: React.FC<RequirementSelectionModalProps> = ({
         await dispatch(updateRequirement({
           id: requirement.id,
           updatedData: { 
-            status: Status.DONE,
+            status: Status.TO_DO,
             origin: 'human'
           }
         }));

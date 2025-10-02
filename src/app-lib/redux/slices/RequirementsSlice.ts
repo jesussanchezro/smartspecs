@@ -235,7 +235,7 @@ export const getApprovedRequirementsByProject = createAsyncThunk(
       const q = query(
         collection(firestore, "requirements"),
         where("projectId", "==", projectId),
-        where("status", "==", Status.DONE)
+        where("status", "==", Status.TO_DO)
       );
 
       const snap = await getDocs(q);

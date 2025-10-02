@@ -115,7 +115,7 @@ const RequirementRow: React.FC<RequirementRowProps> = ({
             style={{ minHeight: "100px" }}
           />
         ) : (
-          <div className="text-gray-500">{requirement.description}</div>
+          <div style={{ maxWidth: 700 }} className="text-gray-500">{requirement.description}</div>
         )}
       </td>
 

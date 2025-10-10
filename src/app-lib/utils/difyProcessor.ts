@@ -24,7 +24,7 @@ interface ProcessDifyParams {
     meetingDescription: string,
     meetingTranscription: string
   ) => void;
-  status: "new" | "updated";
+  status: "new" | "refine";
 }
 
 function mapStatus(value: string): Status {
@@ -55,6 +55,7 @@ export async function processDifyWorkflow({
   status
 }: ProcessDifyParams) {
   try {
+
     const wfResp = await callDifyWorkflow(
       projectId,
       meetingId,
@@ -80,7 +81,7 @@ export async function processDifyWorkflow({
       })
       
       const requirementsNews = allRequirements.filter(requirement => !requirement.id);
-
+      
       for (const requirement of requirementsNews) {
         try {
           const newRequirementResult = await dispatch(

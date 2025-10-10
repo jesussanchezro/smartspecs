@@ -260,7 +260,6 @@ export const getApprovedRequirementsByProject = createAsyncThunk(
         return RequirementAdapter.toApp(RequirementAdapter.toDomain(requirement));
       });
 
-      console.log("requirements slice", requirements);
       return requirements;
     } catch (error) {
       console.error("Error fetching requirements:", error);

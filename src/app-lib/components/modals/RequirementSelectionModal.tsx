@@ -92,10 +92,12 @@ const RequirementSelectionModal: React.FC<RequirementSelectionModalProps> = ({
     try {
       setIsProcessing(true);      
       
+      // get requirements marked with "reject" or "refine" to mark as rejected to firebase
       const unselectedRequirements = requirements
         .filter(requirement =>
               requirement.status === Status.PENDING
-              && !selectedIds.includes(requirement.id)
+              && requirementActions[requirement.id] === 'reject' 
+              || requirementActions[requirement.id] === 'refine'
         );
 
       for (const requirement of unselectedRequirements) {
@@ -109,7 +111,8 @@ const RequirementSelectionModal: React.FC<RequirementSelectionModalProps> = ({
       }
       
       const selectedRequirements = requirements
-        .filter(requirement => selectedIds.includes(requirement.id));
+        .filter(requirement => requirementActions[requirement.id] === 'approve');
+
       for (const requirement of selectedRequirements) {
         await dispatch(updateRequirement({
           id: requirement.id,
@@ -119,8 +122,12 @@ const RequirementSelectionModal: React.FC<RequirementSelectionModalProps> = ({
           }
         }));
       }
+
+      // get requirements marked with "refine" to send once again to Dify
+      const requirementsToRefine = requirements
+        .filter(requirement => requirementActions[requirement.id] === 'refine')
       
-      onSend(selectedRequirements);
+      onSend(requirementsToRefine);
       onClose();
     } catch (error) {
       console.error({error});
@@ -295,7 +302,7 @@ const RequirementSelectionModal: React.FC<RequirementSelectionModalProps> = ({
           {activeTab === 'pending' && (
             <button
               onClick={handleSend}
-              disabled={selectedIds.length === 0 || isProcessing}
+              disabled={isProcessing}
               className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
             >
               <i className="fas fa-save"></i>

@@ -134,7 +134,7 @@ const ProjectDetail: React.FC = () => {
           requirementsList: selectedRequirements,
           requirementsListRejected: unselectedRequirements,
           onShowModal: handleShowRequirementsModal,
-          status: "updated"
+          status: "refine"
         });
 
         await dispatch(getApprovedRequirementsByProject(project.id));

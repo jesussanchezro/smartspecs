@@ -21,7 +21,7 @@ export async function callDifyWorkflow(
   meetingTranscription: string,
   requirementsList: Requirement[],
   requirementsListRejected: Requirement[],
-  status: "new" | "updated"
+  status: "new" | "refine"
 ): Promise<{
   updatedRequirementsList: Requirement[];
   newRequirementsList: Requirement[];

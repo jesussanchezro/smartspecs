@@ -7,6 +7,7 @@ import ProjectForm from "@/smartspecs/app-lib/components/forms/ProjectForm";
 import MeetingList from "@/smartspecs/app-lib/components/lists/MeetingList";
 import ProjectInfo from "./components/ProjectInfo";
 import Modal from "@/smartspecs/app-lib/components/modals/Modal";
+import ConfirmModal from "@/smartspecs/app-lib/components/modals/ConfirmModal";
 import LoadingSpinner from "@/smartspecs/app-lib/components/common/LoadingSpinner";
 import ErrorMessage from "@/smartspecs/app-lib/components/messages/ErrorMessage";
 import SuccessMessage from "@/smartspecs/app-lib/components/messages/SuccessMessage";
@@ -47,8 +48,11 @@ const ProjectDetail: React.FC = () => {
     handleSaveSuccess,
     showMeetingModal,
     setShowMeetingModal,
-    handleDeleteAllMeetings,
+    handleDeleteMeetingsClick,
+    handleCancelDeleteMeetings,
+    handleConfirmDeleteMeetings,
     isDeletingMeetings,
+    showDeleteConfirmModal,
   } = useProjectDetail(project);
 
   const [showCopySuccess, setShowCopySuccess] = useState(false);
@@ -220,7 +224,7 @@ const ProjectDetail: React.FC = () => {
             </button>
             <button
               className="bg-red-500 text-white px-4 py-2 rounded"
-              onClick={handleDeleteAllMeetings}
+              onClick={handleDeleteMeetingsClick}
               disabled={isDeletingMeetings}
             >
               {isDeletingMeetings ? (
@@ -288,6 +292,17 @@ const ProjectDetail: React.FC = () => {
           onSend={handleSendSelectedRequirements}
         />
       </Modal>
+
+      <ConfirmModal
+        isOpen={showDeleteConfirmModal}
+        onClose={handleCancelDeleteMeetings}
+        onConfirm={handleConfirmDeleteMeetings}
+        title="Delete All Meetings"
+        message="Are you sure you want to delete all meetings from this project? This action cannot be undone."
+        confirmText="Delete All"
+        cancelText="Cancel"
+        confirmButtonStyle="danger"
+      />
 
       <div className="bg-background p-6 rounded-xl shadow-md w-full mt-8">
         <h2 className="text-2xl font-bold mb-4">Meetings</h2>

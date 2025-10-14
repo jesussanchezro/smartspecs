@@ -17,6 +17,7 @@ export const useProjectDetail = (project?: Project) => {
   const [updateSuccessMsg, setUpdateSuccessMsg] = useState("");
   const [showMeetingModal, setShowMeetingModal] = useState(false);
   const [isDeletingMeetings, setIsDeletingMeetings] = useState(false);
+  const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
 
   // Ejemplo: si quisieras eliminar todo el proyecto desde acá, podrías
   // meterlo en un "useProjectActions.ts" con removeProject() y llamarlo aquí.
@@ -38,8 +39,19 @@ export const useProjectDetail = (project?: Project) => {
     setUpdateSuccessMsg(message);
   };
 
-  const handleDeleteAllMeetings = async () => {
+  const handleDeleteMeetingsClick = () => {
+    setShowDeleteConfirmModal(true);
+  };
+
+  const handleCancelDeleteMeetings = () => {
+    setShowDeleteConfirmModal(false);
+  };
+
+  const handleConfirmDeleteMeetings = async () => {
     if (!project?.id) return;
+    
+    setShowDeleteConfirmModal(false);
+    
     try {
       setIsDeletingMeetings(true);
 
@@ -74,9 +86,12 @@ export const useProjectDetail = (project?: Project) => {
     showMeetingModal,
     setShowMeetingModal,
     isDeletingMeetings,
+    showDeleteConfirmModal,
     handleEdit,
     handleCancelEdit,
     handleSaveSuccess,
-    handleDeleteAllMeetings,
+    handleDeleteMeetingsClick,
+    handleCancelDeleteMeetings,
+    handleConfirmDeleteMeetings,
   };
 };

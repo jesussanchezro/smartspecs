@@ -19,16 +19,12 @@ const RequirementSelectionModal: React.FC<RequirementSelectionModalProps> = ({
   onSend,
 }) => {
   const dispatch = useAppDispatch();
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const [selectAll, setSelectAll] = useState(false);
   const [activeTab, setActiveTab] = useState<'pending' | 'approved' | 'rejected'>('pending');
   const [isProcessing, setIsProcessing] = useState(false);
   const [requirementActions, setRequirementActions] = useState<Record<string, RequirementAction>>({});
 
   useEffect(() => {
     if (isOpen) {
-      setSelectedIds([]);
-      setSelectAll(false);
       setActiveTab('pending');
       // Initialize all requirements with 'approve' as default action
       const defaultActions: Record<string, RequirementAction> = {};
@@ -56,31 +52,6 @@ const RequirementSelectionModal: React.FC<RequirementSelectionModalProps> = ({
   };
 
   const activeRequirements = getActiveRequirements();
-
-  const handleSelectAll = () => {
-    if (selectAll) {
-      setSelectedIds([]);
-      setSelectAll(false);
-    } else {
-      const allIds = activeRequirements.map(req => req.id);
-      setSelectedIds(allIds);
-      setSelectAll(true);
-    }
-  };
-
-  const handleRequirementToggle = (requirementId: string) => {
-    setSelectedIds(prev => {
-      if (prev.includes(requirementId)) {
-        const newSelected = prev.filter(id => id !== requirementId);
-        setSelectAll(newSelected.length === activeRequirements.length);
-        return newSelected;
-      } else {
-        const newSelected = [...prev, requirementId];
-        setSelectAll(newSelected.length === activeRequirements.length);
-        return newSelected;
-      }
-    });
-  };
 
   const handleActionChange = (requirementId: string, action: RequirementAction) => {
     setRequirementActions(prev => ({
@@ -194,20 +165,6 @@ const RequirementSelectionModal: React.FC<RequirementSelectionModalProps> = ({
           </button>
         </div>
 
-        {activeTab === 'pending' && activeRequirements.length > 0 && (
-          <div className="mb-4">
-            <label className="flex items-center space-x-2 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={selectAll}
-                onChange={handleSelectAll}
-                className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
-              />
-              <span className="font-medium text-gray-700">Select All</span>
-            </label>
-          </div>
-        )}
-
         <div className="overflow-y-auto max-h-96 space-y-3">
           {activeRequirements.length === 0 ? (
             <div className="text-center py-8 text-gray-500">
@@ -223,29 +180,11 @@ const RequirementSelectionModal: React.FC<RequirementSelectionModalProps> = ({
                     : ''
                 }`}
               >
-                {activeTab === 'pending' ? (
-                  <input
-                    type="checkbox"
-                    checked={selectedIds.includes(requirement.id)}
-                    onChange={(e) => {
-                      e.stopPropagation();
-                      handleRequirementToggle(requirement.id);
-                    }}
-                    className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500 mt-1 cursor-pointer"
-                  />
-                ) : (
+                {activeTab !== 'pending' && (
                   <div className="w-4"></div>
                 )}
                 
-                <div 
-                  className="flex-1"
-                  onClick={(e) => {
-                    // Only toggle if clicking on the content area, not the dropdown
-                    if (activeTab === 'pending' && !(e.target as HTMLElement).closest('select')) {
-                      handleRequirementToggle(requirement.id);
-                    }
-                  }}
-                >
+                <div className="flex-1">
                   <h3 className="font-medium text-gray-900">{requirement.title}</h3>
                   <p className="text-sm text-gray-600 mt-1">{requirement.description}</p>
                   <div className="flex space-x-2 mt-2">
@@ -270,27 +209,28 @@ const RequirementSelectionModal: React.FC<RequirementSelectionModalProps> = ({
                   </div>
                 </div>
 
-                {/* Action Dropdown */}
-                <div className="flex-shrink-0">
-                  <select
-                    value={requirementActions[requirement.id] || 'approve'}
-                    onChange={(e) => handleActionChange(requirement.id, e.target.value as RequirementAction)}
-                    onClick={(e) => e.stopPropagation()}
-                    className={`px-3 py-1.5 text-sm font-medium border rounded-md focus:outline-none focus:ring-2 transition-colors ${
-                      requirementActions[requirement.id] === 'approve'
-                        ? 'border-green-300 bg-green-50 text-green-700 focus:ring-green-500'
-                        : requirementActions[requirement.id] === 'reject'
-                        ? 'border-red-300 bg-red-50 text-red-700 focus:ring-red-500'
-                        : requirementActions[requirement.id] === 'refine'
-                        ? 'border-blue-300 bg-blue-50 text-blue-700 focus:ring-blue-500'
-                        : 'border-green-300 bg-green-50 text-green-700 focus:ring-green-500'
-                    }`}
-                  >
-                    <option value="approve">Approve</option>
-                    <option value="reject">Reject</option>
-                    <option value="refine">Refine</option>
-                  </select>
-                </div>
+                { activeTab === 'pending' &&
+                  <div className="flex-shrink-0">
+                    <select
+                      value={requirementActions[requirement.id] || 'approve'}
+                      onChange={(e) => handleActionChange(requirement.id, e.target.value as RequirementAction)}
+                      onClick={(e) => e.stopPropagation()}
+                      className={`px-3 py-1.5 text-sm font-medium border rounded-md focus:outline-none focus:ring-2 transition-colors ${
+                        requirementActions[requirement.id] === 'approve'
+                          ? 'border-green-300 bg-green-50 text-green-700 focus:ring-green-500'
+                          : requirementActions[requirement.id] === 'reject'
+                          ? 'border-red-300 bg-red-50 text-red-700 focus:ring-red-500'
+                          : requirementActions[requirement.id] === 'refine'
+                          ? 'border-blue-300 bg-blue-50 text-blue-700 focus:ring-blue-500'
+                          : 'border-green-300 bg-green-50 text-green-700 focus:ring-green-500'
+                      }`}
+                    >
+                      <option value="approve">Approve</option>
+                      <option value="reject">Reject</option>
+                      <option value="refine">Refine</option>
+                    </select>
+                  </div>
+                }
               </div>
             ))
           )}

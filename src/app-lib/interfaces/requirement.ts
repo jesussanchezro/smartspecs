@@ -12,6 +12,8 @@ export enum Priority {
     HIGH = "high",
 }
 
+export type RequirementAction = 'approve' | 'reject' | 'refine' | null;
+
 export interface Requirement {
     id: string;
     projectId: string;

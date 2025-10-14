@@ -38,7 +38,6 @@ export const createRequirement = createAsyncThunk(
     try {
       const timestamp = Timestamp.now();
 
-      console.log("requirement", requirement);
       const docRef = await addDoc(collection(firestore, "requirements"), {
         ...requirement,
         responsible: requirement.responsible ?? "",
@@ -260,7 +259,6 @@ export const getApprovedRequirementsByProject = createAsyncThunk(
         return RequirementAdapter.toApp(RequirementAdapter.toDomain(requirement));
       });
 
-      console.log("requirements slice", requirements);
       return requirements;
     } catch (error) {
       console.error("Error fetching requirements:", error);

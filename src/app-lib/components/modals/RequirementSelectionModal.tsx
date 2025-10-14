@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Requirement, Status } from "@/smartspecs/app-lib/interfaces/requirement";
+import { Requirement, Status, RequirementAction } from "@/smartspecs/app-lib/interfaces/requirement";
 import { useAppDispatch } from "@/smartspecs/app-lib/hooks/useAppDispatch";
 import { updateRequirement } from "@/smartspecs/app-lib/redux/slices/RequirementsSlice";
 
@@ -19,18 +19,24 @@ const RequirementSelectionModal: React.FC<RequirementSelectionModalProps> = ({
   onSend,
 }) => {
   const dispatch = useAppDispatch();
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const [selectAll, setSelectAll] = useState(false);
   const [activeTab, setActiveTab] = useState<'pending' | 'approved' | 'rejected'>('pending');
   const [isProcessing, setIsProcessing] = useState(false);
+  const [requirementActions, setRequirementActions] = useState<Record<string, RequirementAction>>({});
 
   useEffect(() => {
     if (isOpen) {
-      setSelectedIds([]);
-      setSelectAll(false);
       setActiveTab('pending');
+      // Initialize all requirements with 'approve' as default action
+      const defaultActions: Record<string, RequirementAction> = {};
+      requirements.forEach(req => {
+        // avoid to approve rejected previous requirements
+        if (req.status === Status.PENDING) {
+          defaultActions[req.id] = 'approve';
+        }
+      });
+      setRequirementActions(defaultActions);
     }
-  }, [isOpen]);
+  }, [isOpen, requirements]);
 
   const pendingRequirements = requirements.filter(req => req.status === Status.PENDING);
   const approvedRequirements = requirements.filter(req => req.status === Status.TO_DO);
@@ -47,39 +53,23 @@ const RequirementSelectionModal: React.FC<RequirementSelectionModalProps> = ({
 
   const activeRequirements = getActiveRequirements();
 
-  const handleSelectAll = () => {
-    if (selectAll) {
-      setSelectedIds([]);
-      setSelectAll(false);
-    } else {
-      const allIds = activeRequirements.map(req => req.id);
-      setSelectedIds(allIds);
-      setSelectAll(true);
-    }
-  };
-
-  const handleRequirementToggle = (requirementId: string) => {
-    setSelectedIds(prev => {
-      if (prev.includes(requirementId)) {
-        const newSelected = prev.filter(id => id !== requirementId);
-        setSelectAll(newSelected.length === activeRequirements.length);
-        return newSelected;
-      } else {
-        const newSelected = [...prev, requirementId];
-        setSelectAll(newSelected.length === activeRequirements.length);
-        return newSelected;
-      }
-    });
+  const handleActionChange = (requirementId: string, action: RequirementAction) => {
+    setRequirementActions(prev => ({
+      ...prev,
+      [requirementId]: action
+    }));
   };
 
   const handleSend = async () => {
     try {
       setIsProcessing(true);      
       
+      // get requirements marked with "reject" or "refine" to mark as rejected to firebase
       const unselectedRequirements = requirements
         .filter(requirement =>
               requirement.status === Status.PENDING
-              && !selectedIds.includes(requirement.id)
+              && requirementActions[requirement.id] === 'reject' 
+              || requirementActions[requirement.id] === 'refine'
         );
 
       for (const requirement of unselectedRequirements) {
@@ -93,7 +83,8 @@ const RequirementSelectionModal: React.FC<RequirementSelectionModalProps> = ({
       }
       
       const selectedRequirements = requirements
-        .filter(requirement => selectedIds.includes(requirement.id));
+        .filter(requirement => requirementActions[requirement.id] === 'approve');
+
       for (const requirement of selectedRequirements) {
         await dispatch(updateRequirement({
           id: requirement.id,
@@ -103,8 +94,16 @@ const RequirementSelectionModal: React.FC<RequirementSelectionModalProps> = ({
           }
         }));
       }
+
+      // get requirements marked with "refine" to send once again to Dify
+      const requirementsToRefine = requirements
+        .filter(requirement => requirementActions[requirement.id] === 'refine')
       
-      onSend(selectedRequirements);
+      // only send to dify the requirements to refine
+      if (requirementsToRefine.length > 0) {
+        onSend(requirementsToRefine);  
+      }
+      
       onClose();
     } catch (error) {
       console.error({error});
@@ -166,20 +165,6 @@ const RequirementSelectionModal: React.FC<RequirementSelectionModalProps> = ({
           </button>
         </div>
 
-        {activeTab === 'pending' && activeRequirements.length > 0 && (
-          <div className="mb-4">
-            <label className="flex items-center space-x-2 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={selectAll}
-                onChange={handleSelectAll}
-                className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
-              />
-              <span className="font-medium text-gray-700">Select All</span>
-            </label>
-          </div>
-        )}
-
         <div className="overflow-y-auto max-h-96 space-y-3">
           {activeRequirements.length === 0 ? (
             <div className="text-center py-8 text-gray-500">
@@ -191,28 +176,15 @@ const RequirementSelectionModal: React.FC<RequirementSelectionModalProps> = ({
                 key={requirement.id}
                 className={`flex items-start space-x-3 p-3 border border-gray-200 rounded-lg transition-colors ${
                   activeTab === 'pending' 
-                    ? 'hover:bg-gray-50 cursor-pointer' 
+                    ? 'hover:bg-gray-50' 
                     : ''
                 }`}
               >
-                {activeTab === 'pending' ? (
-                  <input
-                    type="checkbox"
-                    checked={selectedIds.includes(requirement.id)}
-                    onChange={(e) => {
-                      e.stopPropagation();
-                      handleRequirementToggle(requirement.id);
-                    }}
-                    className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500 mt-1 cursor-pointer"
-                  />
-                ) : (
+                {activeTab !== 'pending' && (
                   <div className="w-4"></div>
                 )}
                 
-                <div 
-                  className={`flex-1 ${activeTab === 'pending' ? 'cursor-pointer' : ''}`}
-                  onClick={activeTab === 'pending' ? () => handleRequirementToggle(requirement.id) : undefined}
-                >
+                <div className="flex-1">
                   <h3 className="font-medium text-gray-900">{requirement.title}</h3>
                   <p className="text-sm text-gray-600 mt-1">{requirement.description}</p>
                   <div className="flex space-x-2 mt-2">
@@ -236,6 +208,29 @@ const RequirementSelectionModal: React.FC<RequirementSelectionModalProps> = ({
                     </span>
                   </div>
                 </div>
+
+                { activeTab === 'pending' &&
+                  <div className="flex-shrink-0">
+                    <select
+                      value={requirementActions[requirement.id] || 'approve'}
+                      onChange={(e) => handleActionChange(requirement.id, e.target.value as RequirementAction)}
+                      onClick={(e) => e.stopPropagation()}
+                      className={`px-3 py-1.5 text-sm font-medium border rounded-md focus:outline-none focus:ring-2 transition-colors ${
+                        requirementActions[requirement.id] === 'approve'
+                          ? 'border-green-300 bg-green-50 text-green-700 focus:ring-green-500'
+                          : requirementActions[requirement.id] === 'reject'
+                          ? 'border-red-300 bg-red-50 text-red-700 focus:ring-red-500'
+                          : requirementActions[requirement.id] === 'refine'
+                          ? 'border-blue-300 bg-blue-50 text-blue-700 focus:ring-blue-500'
+                          : 'border-green-300 bg-green-50 text-green-700 focus:ring-green-500'
+                      }`}
+                    >
+                      <option value="approve">Approve</option>
+                      <option value="reject">Reject</option>
+                      <option value="refine">Refine</option>
+                    </select>
+                  </div>
+                }
               </div>
             ))
           )}
@@ -252,11 +247,11 @@ const RequirementSelectionModal: React.FC<RequirementSelectionModalProps> = ({
           {activeTab === 'pending' && (
             <button
               onClick={handleSend}
-              disabled={selectedIds.length === 0 || isProcessing}
+              disabled={isProcessing}
               className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
             >
               <i className="fas fa-save"></i>
-              {isProcessing ? "Processing..." : `Send Selected (${selectedIds.length})`}
+              {isProcessing ? "Processing..." : `Save Requirements`}
             </button>
           )}
         </div>

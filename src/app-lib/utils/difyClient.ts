@@ -21,7 +21,7 @@ export async function callDifyWorkflow(
   meetingTranscription: string,
   requirementsList: Requirement[],
   requirementsListRejected: Requirement[],
-  status: "new" | "updated"
+  status: "new" | "refine"
 ): Promise<{
   updatedRequirementsList: Requirement[];
   newRequirementsList: Requirement[];
@@ -49,7 +49,6 @@ export async function callDifyWorkflow(
     };
 
     const res = await runWorkflowStreaming(payload);
-    console.log("✅ Dify workflow raw result:", res);
 
     return {
       updatedRequirementsList: parseJSONSafely(res?.updated_requirements_list),

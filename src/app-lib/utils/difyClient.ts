@@ -49,7 +49,6 @@ export async function callDifyWorkflow(
     };
 
     const res = await runWorkflowStreaming(payload);
-    console.log("✅ Dify workflow raw result:", res);
 
     return {
       updatedRequirementsList: parseJSONSafely(res?.updated_requirements_list),

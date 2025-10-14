@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Requirement, Status } from "@/smartspecs/app-lib/interfaces/requirement";
+import { Requirement, Status, RequirementAction } from "@/smartspecs/app-lib/interfaces/requirement";
 import { useAppDispatch } from "@/smartspecs/app-lib/hooks/useAppDispatch";
 import { updateRequirement } from "@/smartspecs/app-lib/redux/slices/RequirementsSlice";
 
@@ -10,8 +10,6 @@ interface RequirementSelectionModalProps {
   requirements: Requirement[];
   onSend: (selectedRequirements: Requirement[]) => void;
 }
-
-type RequirementAction = 'approve' | 'reject' | 'refine' | null;
 
 const RequirementSelectionModal: React.FC<RequirementSelectionModalProps> = ({
   isOpen,
@@ -35,7 +33,10 @@ const RequirementSelectionModal: React.FC<RequirementSelectionModalProps> = ({
       // Initialize all requirements with 'approve' as default action
       const defaultActions: Record<string, RequirementAction> = {};
       requirements.forEach(req => {
-        defaultActions[req.id] = 'approve';
+        // avoid to approve rejected previous requirements
+        if (req.status === Status.PENDING) {
+          defaultActions[req.id] = 'approve';
+        }
       });
       setRequirementActions(defaultActions);
     }
@@ -127,7 +128,11 @@ const RequirementSelectionModal: React.FC<RequirementSelectionModalProps> = ({
       const requirementsToRefine = requirements
         .filter(requirement => requirementActions[requirement.id] === 'refine')
       
-      onSend(requirementsToRefine);
+      // only send to dify the requirements to refine
+      if (requirementsToRefine.length > 0) {
+        onSend(requirementsToRefine);  
+      }
+      
       onClose();
     } catch (error) {
       console.error({error});
@@ -306,7 +311,7 @@ const RequirementSelectionModal: React.FC<RequirementSelectionModalProps> = ({
               className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
             >
               <i className="fas fa-save"></i>
-              {isProcessing ? "Processing..." : `Send Selected (${selectedIds.length})`}
+              {isProcessing ? "Processing..." : `Save Requirements`}
             </button>
           )}
         </div>

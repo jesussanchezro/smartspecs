@@ -103,7 +103,6 @@ export async function processDifyWorkflow({
         }
       }
       const requirements = await getProjectRequirements(projectId);
-      console.log({requirements})
       onShowModal(requirements, meetingTitle, meetingId, meetingDescription, meetingTranscription);
     }
 

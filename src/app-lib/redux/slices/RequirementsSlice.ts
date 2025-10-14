@@ -38,7 +38,6 @@ export const createRequirement = createAsyncThunk(
     try {
       const timestamp = Timestamp.now();
 
-      console.log("requirement", requirement);
       const docRef = await addDoc(collection(firestore, "requirements"), {
         ...requirement,
         responsible: requirement.responsible ?? "",

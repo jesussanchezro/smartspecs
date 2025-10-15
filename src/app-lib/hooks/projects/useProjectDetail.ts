@@ -1,6 +1,9 @@
 // src/app-lib/hooks/projects/useProjectDetailUI.ts
 
 import { useState } from "react";
+import { useDispatch } from "react-redux";
+import { AppDispatch } from "@/smartspecs/app-lib/redux/store";
+import { deleteAllMeetingsByProject } from "@/smartspecs/app-lib/redux/slices/MeetingsSlice";
 import { Project } from "@/smartspecs/app-lib/interfaces/project";
 import { toast } from "react-toastify";
 
@@ -12,6 +15,8 @@ import { toast } from "react-toastify";
  * - lógica de "eliminar todas las reuniones"
  */
 export const useProjectDetail = (project?: Project) => {
+  const dispatch = useDispatch<AppDispatch>();
+  
   const [isEditing, setIsEditing] = useState(false);
   const [deleteSuccessMsg, setDeleteSuccessMsg] = useState("");
   const [updateSuccessMsg, setUpdateSuccessMsg] = useState("");
@@ -51,26 +56,16 @@ export const useProjectDetail = (project?: Project) => {
     if (!project?.id) return;
     
     setShowDeleteConfirmModal(false);
+    setIsDeletingMeetings(true);
     
     try {
-      setIsDeletingMeetings(true);
+      const resultAction = await dispatch(deleteAllMeetingsByProject(project.id));
 
-      // Ejemplo de llamada fetch:
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_LOCAL_BASE_URL}/meetings/clear`,
-        {
-          method: "DELETE",
-          headers: { "Content-Type": "application/json" },
-        }
-      );
-
-      if (!response.ok) {
+      if (deleteAllMeetingsByProject.fulfilled.match(resultAction)) {
+        toast.success("All meetings have been deleted successfully");
+      } else {
         throw new Error("Error deleting meetings");
       }
-
-      toast.success("All meetings have been deleted successfully");
-
-      // Podés disparar un refresh de reuniones, etc.
     } catch (error) {
       console.error("❌ Error deleting meetings:", error);
       toast.error("Error deleting meetings");

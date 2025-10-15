@@ -173,6 +173,33 @@ export const getMeetingsByProject = createAsyncThunk(
   }
 );
 
+// Eliminar todas las reuniones de un proyecto
+export const deleteAllMeetingsByProject = createAsyncThunk(
+  "meetings/deleteAllMeetingsByProject",
+  async (projectId: string, { rejectWithValue }) => {
+    try {
+      const q = query(
+        collection(firestore, "meetings"),
+        where("projectId", "==", projectId)
+      );
+
+      const snap = await getDocs(q);
+      
+      // Eliminar todos los documentos encontrados
+      const deletePromises = snap.docs.map((docSnapshot) =>
+        deleteDoc(doc(firestore, "meetings", docSnapshot.id))
+      );
+
+      await Promise.all(deletePromises);
+
+      return projectId;
+    } catch (error) {
+      console.error("❌ Error eliminando todas las reuniones:", error);
+      return rejectWithValue("Error al eliminar reuniones");
+    }
+  }
+);
+
 const meetingsSlice = createSlice({
   name: "meetings",
   initialState,
@@ -249,6 +276,20 @@ const meetingsSlice = createSlice({
         state.meetings = state.meetings.filter((m) => m.id !== action.payload);
       })
       .addCase(deleteMeeting.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+
+      .addCase(deleteAllMeetingsByProject.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(deleteAllMeetingsByProject.fulfilled, (state, action: PayloadAction<string>) => {
+        state.loading = false;
+        // Clear all meetings for the specified project
+        state.meetings = state.meetings.filter((m) => m.projectId !== action.payload);
+      })
+      .addCase(deleteAllMeetingsByProject.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
       });

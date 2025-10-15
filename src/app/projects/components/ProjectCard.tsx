@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import Link from "next/link";
 import { Project } from "@/smartspecs/app-lib/interfaces/project";
 
@@ -15,6 +15,14 @@ interface ProjectCardProps {
 
 const ProjectCard: React.FC<ProjectCardProps> = ({ project, onDeleteClick }) => {
 
+  const handleDeleteClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (onDeleteClick) {
+      onDeleteClick();
+    }
+  };
+
   return (
     <>
       <Link key={project.id} href={`/projects/${project.id}`}>
@@ -26,7 +34,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, onDeleteClick }) => 
             <div className="flex items-center gap-2">
               <span className="text-xs text-text/50">#{project.id}</span>
               <button
-                onClick={onDeleteClick}
+                onClick={handleDeleteClick}
                 className={"p-1.5 rounded-md transition-colors text-red-500 hover:bg-red-50"}
                 title="Delete project"
               >

@@ -5,4 +5,6 @@ export interface Project {
     description: string;
     createdAt: string;
     updatedAt: string;
+    deletedAt?: string;
+    userId?: string;
 }

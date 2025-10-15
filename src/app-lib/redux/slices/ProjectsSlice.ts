@@ -4,7 +4,6 @@ import {
   getDocs,
   addDoc,
   updateDoc,
-  deleteDoc,
   doc,
   getDoc,
   Timestamp,
@@ -13,16 +12,7 @@ import {
 } from "firebase/firestore";
 import { toISODate } from "@/smartspecs/app-lib/utils/firestoreTimeStamps";
 import { firestore } from "@/smartspecs/lib/config/firebase-settings";
-
-export interface Project {
-  id: string;
-  title: string;
-  client: string;
-  description: string;
-  createdAt: string;
-  updatedAt: string;
-  userId: string;
-}
+import { Project } from "@/smartspecs/app-lib/interfaces/project";
 
 interface ProjectState {
   projects: Project[];
@@ -111,7 +101,11 @@ export const deleteProject = createAsyncThunk(
   "projects/deleteProject",
   async (id: string, { rejectWithValue }) => {
     try {
-      await deleteDoc(doc(firestore, "projects", id));
+      // use soft-deletion for project
+      const timestamp = Timestamp.now();
+      await updateDoc(doc(firestore, "projects", id), {
+        deletedAt: timestamp,
+      });
       return id;
     } catch (error) {
       console.error("Error al eliminar el proyecto:", error);
@@ -157,10 +151,10 @@ export const getProjects = createAsyncThunk(
         where("userId", "==", userId)
       );
       const querySnapshot = await getDocs(projectsQuery);
-      
-      return querySnapshot.docs.map((docSnap) => {
+      const projects: Project[] = [];
+      querySnapshot.docs.map((docSnap) => {
         const data = docSnap.data();
-        return {
+        const project = {
           id: docSnap.id,
           title: data.title,
           client: data.client,
@@ -168,9 +162,17 @@ export const getProjects = createAsyncThunk(
           userId: data.userId,
           createdAt: toISODate(data.createdAt),
           updatedAt: toISODate(data.updatedAt),
+          deletedAt: data.deletedAt ? toISODate(data.deletedAt) : undefined,
         } as Project;
+
+        // show only not deleted projects
+        if (project.deletedAt === undefined) {
+          projects.push(project);
+        }
       })
-      .sort((after, before) => new Date(before.createdAt).getTime() - new Date(after.createdAt).getTime());
+
+      projects.sort((after, before) => new Date(before.createdAt).getTime() - new Date(after.createdAt).getTime());
+      return projects;
     } catch (error) {
       console.error("Error al obtener proyectos:", error);
       return rejectWithValue("Error al obtener proyectos");

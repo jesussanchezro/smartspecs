@@ -1,16 +1,47 @@
 import React from "react";
 import Link from "next/link";
 import { Project } from "@/smartspecs/app-lib/interfaces/project";
-const ProjectCard: React.FC<{ project: Project }> = ({ project }) => {
+
+const DeleteIcon = () => (
+  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+  </svg>
+);
+
+interface ProjectCardProps {
+  project: Project;
+  onDeleteClick?: () => void;
+}
+
+const ProjectCard: React.FC<ProjectCardProps> = ({ project, onDeleteClick }) => {
+
+  const handleDeleteClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (onDeleteClick) {
+      onDeleteClick();
+    }
+  };
+
   return (
-    <Link key={project.id} href={`/projects/${project.id}`}>
-      <div className="bg-background shadow-md rounded-xl p-6 hover:shadow-xl transition-all duration-300 border border-border hover:border-primary/50 cursor-pointer group">
-        <div className="flex justify-between items-start mb-4">
-          <h2 className="font-bold text-xl group-hover:text-primary transition-colors duration-300">
-            {project.title}
-          </h2>
-          <span className="text-xs text-text/50">#{project.id}</span>
-        </div>
+    <>
+      <Link key={project.id} href={`/projects/${project.id}`}>
+        <div className="bg-background shadow-md rounded-xl p-6 hover:shadow-xl transition-all duration-300 border border-border hover:border-primary/50 cursor-pointer group relative">
+          <div className="flex justify-between items-start mb-4">
+            <h2 className="font-bold text-xl group-hover:text-primary transition-colors duration-300">
+              {project.title}
+            </h2>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-text/50">#{project.id}</span>
+              <button
+                onClick={handleDeleteClick}
+                className={"p-1.5 rounded-md transition-colors text-red-500 hover:bg-red-50"}
+                title="Delete project"
+              >
+                <DeleteIcon />
+              </button>
+            </div>
+          </div>
         
         <div className="space-y-3">
           <div className="flex items-center gap-2">
@@ -39,6 +70,7 @@ const ProjectCard: React.FC<{ project: Project }> = ({ project }) => {
         </div>
       </div>
     </Link>
+  </>
   );
 };
 

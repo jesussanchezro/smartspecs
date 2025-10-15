@@ -6,4 +6,5 @@ export interface Meeting {
     createdAt: string;
     updatedAt: string;
     projectId: string;
+    deletedAt?: string;
 }

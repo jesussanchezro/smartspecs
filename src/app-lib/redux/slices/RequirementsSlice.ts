@@ -4,7 +4,6 @@ import {
   getDocs,
   addDoc,
   updateDoc,
-  deleteDoc,
   doc,
   getDoc,
   query,
@@ -145,8 +144,15 @@ export const deleteRequirement = createAsyncThunk(
   "requirements/deleteRequirement",
   async (id: string, { rejectWithValue }) => {
     try {
-      await deleteDoc(doc(firestore, "requirements", id));
+      // use soft-deletion for requirement
+      const docRef = doc(firestore, "requirements", id);
+      const timestamp = Timestamp.now();
+
+      await updateDoc(docRef, {
+        deletedAt: timestamp,
+      });
       return id;
+
     } catch (error) {
       console.error("Error deleting requirement:", error);
       return rejectWithValue("Error al eliminar requerimiento");
@@ -195,7 +201,8 @@ export const getRequirementsByProject = createAsyncThunk(
     try {
       const q = query(
         collection(firestore, "requirements"),
-        where("projectId", "==", projectId)
+        where("projectId", "==", projectId),
+        where("deletedAt", "==", null)
       );
 
       const snap = await getDocs(q);
@@ -234,12 +241,13 @@ export const getApprovedRequirementsByProject = createAsyncThunk(
       const q = query(
         collection(firestore, "requirements"),
         where("projectId", "==", projectId),
-        where("status", "in", [Status.TO_DO, Status.PENDING, Status.IN_PROGRESS, Status.DONE])
+        where("status", "in", [Status.TO_DO, Status.IN_PROGRESS, Status.DONE]),
       );
 
       const snap = await getDocs(q);
-
-      const requirements = snap.docs.map((doc) => {
+      const requirements: Requirement[] = [];
+      
+      snap.docs.forEach((doc) => {
         const data = doc.data();
         const requirement = {
           id: doc.id,
@@ -253,10 +261,13 @@ export const getApprovedRequirementsByProject = createAsyncThunk(
           origin: data.origin || "Dify",
           createdAt: toISODate(data.createdAt),
           updatedAt: toISODate(data.updatedAt),
+          deletedAt: data.deletedAt ? toISODate(data.deletedAt) : undefined,
         } as Requirement;
 
-        
-        return RequirementAdapter.toApp(RequirementAdapter.toDomain(requirement));
+        // show only not deleted requirements
+        if (requirement.deletedAt === undefined) {
+          requirements.push(RequirementAdapter.toApp(RequirementAdapter.toDomain(requirement)));
+        }
       });
 
       return requirements;
@@ -278,8 +289,9 @@ export const getAllRequirementsByProject = createAsyncThunk(
       );
 
       const snap = await getDocs(q);
+      const requirements: Requirement[] = []
 
-      const requirements = snap.docs.map((doc) => {
+      snap.docs.map((doc) => {
         const data = doc.data();
         const requirement = {
           id: doc.id,

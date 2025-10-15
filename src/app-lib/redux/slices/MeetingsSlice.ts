@@ -4,7 +4,6 @@ import {
   getDocs,
   addDoc,
   updateDoc,
-  deleteDoc,
   doc,
   getDoc,
   query,
@@ -93,7 +92,11 @@ export const deleteMeeting = createAsyncThunk(
   "meetings/deleteMeeting",
   async (meetingId: string, { rejectWithValue }) => {
     try {
-      await deleteDoc(doc(firestore, "meetings", meetingId));
+      // use soft-deletion for meeting
+      const timestamp = Timestamp.now();
+      await updateDoc(doc(firestore, "meetings", meetingId), {
+        deletedAt: timestamp,
+      });
       return meetingId;
     } catch (error) {
       console.error("❌ Error eliminando reunión:", error);
@@ -142,9 +145,10 @@ export const getMeetingsByProject = createAsyncThunk(
 
       const snap = await getDocs(q);
 
-      const meetings: Meeting[] = snap.docs.map((doc) => {
+      const meetings: Meeting[] = []
+      snap.docs.map((doc) => {
         const data = doc.data();
-        return {
+        const meeting = {
           id: doc.id,
           projectId: data.projectId,
           title: data.title ?? "",
@@ -152,7 +156,13 @@ export const getMeetingsByProject = createAsyncThunk(
           transcription: data.transcription ?? "",
           createdAt: toISODate(data.createdAt),
           updatedAt: toISODate(data.updatedAt),
+          deletedAt: data.deletedAt ? toISODate(data.deletedAt) : undefined,
         };
+
+        // show only not deleted meetings
+        if (meeting.deletedAt === undefined) {
+          meetings.push(meeting);
+        }
       });
 
       return meetings;

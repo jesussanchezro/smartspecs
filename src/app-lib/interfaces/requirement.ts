@@ -24,4 +24,5 @@ export interface Requirement {
     origin?: string;        // ✅ nuevo
     createdAt: string;
     updatedAt: string;
+    deletedAt?: string;
 }

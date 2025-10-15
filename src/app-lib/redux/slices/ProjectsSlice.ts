@@ -111,7 +111,11 @@ export const deleteProject = createAsyncThunk(
   "projects/deleteProject",
   async (id: string, { rejectWithValue }) => {
     try {
-      await deleteDoc(doc(firestore, "projects", id));
+      // use soft-deletion for project
+      const timestamp = Timestamp.now();
+      await updateDoc(doc(firestore, "projects", id), {
+        deletedAt: timestamp,
+      });
       return id;
     } catch (error) {
       console.error("Error al eliminar el proyecto:", error);

@@ -9,6 +9,7 @@ import {
   query,
   where,
   Timestamp,
+  deleteDoc,
 } from "firebase/firestore";
 import { firestore } from "@/smartspecs/lib/config/firebase-settings";
 import { toISODate } from "@/smartspecs/app-lib/utils/firestoreTimeStamps";
@@ -184,10 +185,12 @@ export const deleteAllMeetingsByProject = createAsyncThunk(
       );
 
       const snap = await getDocs(q);
-      
-      // Eliminar todos los documentos encontrados
+      const timestamp = Timestamp.now();
+      // use soft-deletion for all documents found
       const deletePromises = snap.docs.map((docSnapshot) =>
-        deleteDoc(doc(firestore, "meetings", docSnapshot.id))
+        updateDoc(doc(firestore, "meetings", docSnapshot.id), {
+          deletedAt: timestamp,
+        })            
       );
 
       await Promise.all(deletePromises);

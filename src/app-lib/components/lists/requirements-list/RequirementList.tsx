@@ -25,6 +25,7 @@ const RequirementList: React.FC<RequirementListProps> = ({ requirements }) => {
     setTempStatus,
     setTempResponsible,
     handleEditClick,
+    handleCancelEdit,
     handleDeleteClick,
     confirmDelete,
     cancelDelete,
@@ -50,8 +51,9 @@ const RequirementList: React.FC<RequirementListProps> = ({ requirements }) => {
 
   return (
     <div className="overflow-hidden rounded-xl border border-gray-100 shadow-sm bg-white">
-      <table className="min-w-full divide-y divide-gray-100">
-        <thead className="bg-gray-50">
+      <div className="max-h-96 overflow-y-auto">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="sticky top-0 bg-gray-50">
           <tr>
             <th className="w-12 px-2 py-3 text-center text-xs font-semibold text-gray-600 uppercase">#</th>
             <th className="px-2 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Title</th>
@@ -82,6 +84,7 @@ const RequirementList: React.FC<RequirementListProps> = ({ requirements }) => {
                 onStatusChange={setTempStatus}
                 onResponsibleChange={setTempResponsible}
                 onEditClick={() => handleEditClick(requirement)}
+                onCancelEdit={handleCancelEdit}
                 onDeleteClick={() => handleDeleteClick(requirement.id)}
               />
 
@@ -124,6 +127,7 @@ const RequirementList: React.FC<RequirementListProps> = ({ requirements }) => {
           ))}
         </tbody>
       </table>
+      </div>
 
       {/* Modal Confirmación de Eliminar */}
       <ConfirmModal

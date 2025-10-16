@@ -8,15 +8,17 @@ const MeetingInfo: React.FC<{
   <div className="border border-gray-200 rounded-lg p-6 w-full shadow-sm hover:shadow-md transition-shadow duration-200 bg-white">
     <div className="flex justify-end gap-2 mb-4">
       <button
-        className="bg-primary text-white px-4 py-2 rounded-md hover:bg-primary/90 transition-colors duration-200 font-medium"
+        className="bg-primary text-white px-4 py-2 rounded-md hover:bg-primary/90 transition-colors duration-200 font-medium flex items-center gap-2"
         onClick={() => setIsEditing(true)}
       >
+        <i className="fas fa-edit"></i>
         Edit
       </button>
       <button
-        className="bg-danger text-white px-4 py-2 rounded-md hover:bg-danger/90 transition-colors duration-200 font-medium"
+        className="bg-danger text-white px-4 py-2 rounded-md hover:bg-danger/90 transition-colors duration-200 font-medium flex items-center gap-2"
         onClick={() => setShowDeleteModal(true)}
       >
+        <i className="fas fa-trash"></i>
         Delete
       </button>
     </div>

@@ -7,16 +7,23 @@ import ProjectForm from "@/smartspecs/app-lib/components/forms/ProjectForm";
 import MeetingList from "@/smartspecs/app-lib/components/lists/MeetingList";
 import ProjectInfo from "./components/ProjectInfo";
 import Modal from "@/smartspecs/app-lib/components/modals/Modal";
+import ConfirmModal from "@/smartspecs/app-lib/components/modals/ConfirmModal";
 import LoadingSpinner from "@/smartspecs/app-lib/components/common/LoadingSpinner";
 import ErrorMessage from "@/smartspecs/app-lib/components/messages/ErrorMessage";
 import SuccessMessage from "@/smartspecs/app-lib/components/messages/SuccessMessage";
 import MeetingForm from "@/smartspecs/app-lib/components/forms/MeetingForm";
 import RequirementForm from "@/smartspecs/app-lib/components/forms/RequirementForm";
 import RequirementList from "@/smartspecs/app-lib/components/lists/requirements-list/RequirementList";
+import RequirementSelectionModal from "@/smartspecs/app-lib/components/modals/RequirementSelectionModal";
 import { useProjectData } from "@/smartspecs/app-lib/hooks/projects/useProjectData";
 import { useProjectDetail } from "@/smartspecs/app-lib/hooks/projects/useProjectDetail";
-import { Requirement } from "@/smartspecs/app-lib/interfaces/requirement";
+import { Requirement, Status } from "@/smartspecs/app-lib/interfaces/requirement";
 import { useRouter } from 'next/navigation';
+import { processDifyWorkflow } from "@/smartspecs/app-lib/utils/difyProcessor";
+import { useAppDispatch } from "@/smartspecs/app-lib/hooks/useAppDispatch";
+import { updateRequirement, createRequirement } from "@/smartspecs/app-lib/redux/slices/RequirementsSlice";
+import { toast } from "react-toastify";
+import { getApprovedRequirementsByProject } from "@/smartspecs/app-lib/redux/slices/RequirementsSlice";
 
 const ProjectDetail: React.FC = () => {
   // Este hook se encarga de cargar datos: proyecto, reuniones, requerimientos
@@ -30,6 +37,7 @@ const ProjectDetail: React.FC = () => {
     requirementsError,
   } = useProjectData();
   const router = useRouter();
+  const dispatch = useAppDispatch();
   // Este hook maneja los estados de UI: editar, modales, mensajes de éxito, etc.
   const {
     isEditing,
@@ -40,13 +48,26 @@ const ProjectDetail: React.FC = () => {
     handleSaveSuccess,
     showMeetingModal,
     setShowMeetingModal,
-    handleDeleteAllMeetings,
+    handleDeleteMeetingsClick,
+    handleCancelDeleteMeetings,
+    handleConfirmDeleteMeetings,
     isDeletingMeetings,
+    showDeleteConfirmModal,
   } = useProjectDetail(project);
 
   const [showCopySuccess, setShowCopySuccess] = useState(false);
   const [isMeetingProcessing, setIsMeetingProcessing] = useState(false);
+  const [isRequirementsProcessing, setIsRequirementsProcessing] = useState(false);
   const [showRequirementModal, setShowRequirementModal] = useState(false);
+  const [showRequirementsSelectionModal, setShowRequirementsSelectionModal] = useState(false);
+  const [requirementsToProcess, setRequirementsToProcess] = useState<Requirement[]>([]);
+  const [meetingTitleForModal, setMeetingTitleForModal] = useState("");
+  const [meetingInfoForModal, setMeetingInfoForModal] = useState({
+    meetingId: "",
+    meetingTitle: "",
+    meetingDescription: "",
+    meetingTranscription: ""
+  });
 
   const handleCopyRequirements = () => {
     const requirementsText = requirements.map(req => {
@@ -77,16 +98,70 @@ const ProjectDetail: React.FC = () => {
     setShowRequirementModal(false);
   };
 
+  const handleShowRequirementsModal = (
+    requirements: Requirement[], 
+    meetingTitle: string,
+    meetingId: string = "",
+    meetingDescription: string = "",
+    meetingTranscription: string = ""
+  ) => {
+    setRequirementsToProcess(requirements);
+    setMeetingTitleForModal(meetingTitle);
+    setMeetingInfoForModal({
+      meetingId,
+      meetingTitle,
+      meetingDescription,
+      meetingTranscription
+    });
+    setShowRequirementsSelectionModal(true);
+  };
+
+  const handleSendSelectedRequirements = async (selectedRequirements: Requirement[]) => {
+    if (project?.id) {
+      const unselectedRequirements = requirementsToProcess.filter(
+        requirement => !selectedRequirements.some(selected => selected.id === requirement.id)
+      );
+      
+      setIsRequirementsProcessing(true);
+      
+      try {
+        await processDifyWorkflow({
+          dispatch,
+          projectId: project.id,
+          meetingId: meetingInfoForModal.meetingId,
+          projectTitle: project.title,
+          projectDescription: project.description,
+          projectClient: project.client,
+          meetingTitle: meetingInfoForModal.meetingTitle,
+          meetingDescription: meetingInfoForModal.meetingDescription,
+          meetingTranscription: meetingInfoForModal.meetingTranscription,
+          requirementsList: selectedRequirements,
+          requirementsListRejected: unselectedRequirements,
+          onShowModal: handleShowRequirementsModal,
+          status: "refine"
+        });
+
+        await dispatch(getApprovedRequirementsByProject(project.id));
+      } finally {
+        setIsRequirementsProcessing(false);
+      }
+    }
+  };
+
   const handleAddMeetingClick = () => {
     setShowMeetingModal(true);
   };
 
-  if (loading) {
-    return <LoadingSpinner />;
+  if (loading || !project) {
+    return <LoadingSpinner title="Loading project..." subtitle="Please wait" />;
   }
 
   if (isMeetingProcessing) {
     return <LoadingSpinner title="Processing meeting..." subtitle="This may take a moment" />;
+  }
+
+  if (isRequirementsProcessing) {
+    return <LoadingSpinner title="Processing requirements..." subtitle="This may take a moment" />;
   }
 
   if (error || meetingsError || requirementsError) {
@@ -134,20 +209,22 @@ const ProjectDetail: React.FC = () => {
           <ProjectInfo project={project} />
           <div className="flex justify-end gap-4 mt-4">
             <button
-              className="bg-primary text-white px-4 py-2 rounded"
+              className="bg-primary text-white px-4 py-2 rounded flex items-center gap-2"
               onClick={handleEdit}
             >
+              <i className="fas fa-edit"></i>
               Edit
             </button>
             <button
-              className="bg-green-500 text-white px-4 py-2 rounded"
+              className="bg-green-500 text-white px-4 py-2 rounded flex items-center gap-2"
               onClick={handleAddMeetingClick}
             >
+              <i className="fas fa-plus-square"></i>
               Add Meeting
             </button>
             <button
               className="bg-red-500 text-white px-4 py-2 rounded"
-              onClick={handleDeleteAllMeetings}
+              onClick={handleDeleteMeetingsClick}
               disabled={isDeletingMeetings}
             >
               {isDeletingMeetings ? (
@@ -174,7 +251,10 @@ const ProjectDetail: React.FC = () => {
                   Deleting...
                 </>
               ) : (
-                "Delete Meetings"
+                <>
+                  <i className="fas fa-trash"></i>
+                  Delete Meetings
+                </>
               )}
             </button>
           </div>
@@ -186,6 +266,7 @@ const ProjectDetail: React.FC = () => {
           onCancel={() => setShowMeetingModal(false)}
           onSaveSuccess={handleMeetingSaveSuccess}
           onProcessingStart={handleMeetingProcessingStart}
+          onShowRequirementsModal={handleShowRequirementsModal}
           projectId={project.id}
           projectTitle={project.title}
           projectDescription={project.description}
@@ -201,6 +282,27 @@ const ProjectDetail: React.FC = () => {
           projectId={project.id}
         />
       </Modal>
+
+      <Modal isOpen={showRequirementsSelectionModal} onClose={() => setShowRequirementsSelectionModal(false)}>
+        <RequirementSelectionModal
+          isOpen={showRequirementsSelectionModal}
+          onClose={() => setShowRequirementsSelectionModal(false)}
+          meetingTitle={meetingTitleForModal}
+          requirements={requirementsToProcess}
+          onSend={handleSendSelectedRequirements}
+        />
+      </Modal>
+
+      <ConfirmModal
+        isOpen={showDeleteConfirmModal}
+        onClose={handleCancelDeleteMeetings}
+        onConfirm={handleConfirmDeleteMeetings}
+        title="Delete All Meetings"
+        message="Are you sure you want to delete all meetings from this project? This action cannot be undone."
+        confirmText="Delete All"
+        cancelText="Cancel"
+        confirmButtonStyle="danger"
+      />
 
       <div className="bg-background p-6 rounded-xl shadow-md w-full mt-8">
         <h2 className="text-2xl font-bold mb-4">Meetings</h2>
@@ -220,16 +322,25 @@ const ProjectDetail: React.FC = () => {
               </span>
             )}
             <button
-              className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors"
+              className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors flex items-center gap-2"
               onClick={handleCopyRequirements}
             >
+              <i className="fas fa-copy"></i>
               Copy Requirements
             </button>
             <button
-              className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition-colors"
+              className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition-colors flex items-center gap-2"
               onClick={() => setShowRequirementModal(true)}
             >
+              <i className="fas fa-plus-square"></i>
               Add Requirement
+            </button>
+            <button
+              className="bg-purple-500 text-white px-4 py-2 rounded hover:bg-purple-600 transition-colors flex items-center gap-2"
+              onClick={() => setShowRequirementsSelectionModal(true)}
+            >
+              <i className="fas fa-check-square"></i>
+              Select Requirements
             </button>
           </div>
         </div>

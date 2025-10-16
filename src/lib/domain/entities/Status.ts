@@ -1,7 +1,9 @@
 export enum Status {
   IN_PROGRESS = "in progress",
+  TO_DO = "to do",
   DONE = "done",
   PENDING = "pending",
+  REJECTED = "rejected",
 }
 
 export function stringToStatus(status: string): Status {

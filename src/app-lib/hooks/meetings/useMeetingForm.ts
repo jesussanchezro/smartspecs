@@ -23,6 +23,13 @@ interface UseMeetingFormProps {
   onSaveSuccess?: () => void;
   onCancel: () => void;
   onProcessingStart?: () => void; // Nueva función para notificar cuando comienza el procesamiento
+  onShowRequirementsModal?: (
+    requirements: any[], 
+    meetingTitle: string,
+    meetingId: string,
+    meetingDescription: string,
+    meetingTranscription: string
+  ) => void;
 }
 
 export const useMeetingForm = ({
@@ -35,6 +42,7 @@ export const useMeetingForm = ({
   onSaveSuccess,
   onCancel,
   onProcessingStart,
+  onShowRequirementsModal,
 }: UseMeetingFormProps) => {
   const dispatch = useDispatch<AppDispatch>();
   const store = useStore<RootState>(); // 👈 Creamos store
@@ -208,6 +216,11 @@ export const useMeetingForm = ({
             meetingDescription: description,
             meetingTranscription: transcription,
             requirementsList: requirementsList as Requirement[],
+            onShowModal: onShowRequirementsModal ? 
+              (requirements: any[], meetingTitle: string) => 
+                onShowRequirementsModal(requirements, meetingTitle, createdMeeting.id, description, transcription)
+              : undefined,
+            status: "new"
           });
 
           // Refrescamos lista

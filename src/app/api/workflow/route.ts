@@ -1,5 +1,8 @@
+import { AxiosError } from "axios";
 import { NextResponse } from "next/server";
-import axios, { AxiosError } from "axios";
+
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 const DIFY_API_URL = process.env.DIFY_API_URL;
 const DIFY_API_KEY = process.env.DIFY_API_KEY;
@@ -16,13 +19,39 @@ export async function POST(req: Request) {
 
     const { inputs = {}, user = "57Blocks", workflow_id } = await req.json();
 
-    const { data, status } = await axios.post(
-      DIFY_API_URL,
-      { inputs, user, workflow_id: workflow_id ?? DEFAULT_WORKFLOW_ID },
-      { headers: { Authorization: `Bearer ${DIFY_API_KEY}` } }
-    );
+    const upstream = await fetch(DIFY_API_URL, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${DIFY_API_KEY}`,
+        "Content-Type": "application/json",
+        Accept: "text/event-stream",
+      },
+      body: JSON.stringify({
+        inputs,
+        user,
+        workflow_id: workflow_id ?? DEFAULT_WORKFLOW_ID,
+        response_mode: "streaming",
+      }),
+      duplex: "half"
+    });
 
-    return NextResponse.json(data, { status });
+    if (!upstream.ok || !upstream.body) {
+      const text = await upstream.text().catch(() => "");
+      return NextResponse.json(
+        { error: "Upstream error", details: text || upstream.statusText },
+        { status: upstream.status || 500 }
+      );
+    }
+
+    return new Response(upstream.body, {
+      status: 200,
+      headers: {
+        "Content-Type": "text/event-stream; charset=utf-8",
+        "Cache-Control": "no-cache, no-transform",
+        Connection: "keep-alive",
+        "Transfer-Encoding": "chunked",
+      },
+    });
   } catch (err) {
     const error = err as AxiosError;
     console.error("Dify Error:", error.response?.data || error.message);

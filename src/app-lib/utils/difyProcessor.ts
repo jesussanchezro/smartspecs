@@ -3,7 +3,7 @@ import { callDifyWorkflow } from "@/smartspecs/app-lib/utils/difyClient";
 import { createRequirement, updateRequirement } from "@/smartspecs/app-lib/redux/slices/RequirementsSlice";
 import { firestore } from "@/smartspecs/lib/config/firebase-settings";
 import { Priority, Requirement, Status } from "@/smartspecs/app-lib/interfaces/requirement";
-import { doc, getDoc, setDoc, collection, Timestamp } from "firebase/firestore";
+import { doc, getDoc, setDoc, collection, Timestamp, query, getDocs, where } from "firebase/firestore";
 
 interface ProcessDifyParams {
   dispatch: AppDispatch;
@@ -16,6 +16,15 @@ interface ProcessDifyParams {
   meetingDescription: string;
   meetingTranscription: string;
   requirementsList: Requirement[];
+  requirementsListRejected?: Requirement[];
+  onShowModal?: (
+    requirements: Requirement[], 
+    meetingTitle: string,
+    meetingId: string,
+    meetingDescription: string,
+    meetingTranscription: string
+  ) => void;
+  status: "new" | "refine";
 }
 
 function mapStatus(value: string): Status {
@@ -41,8 +50,12 @@ export async function processDifyWorkflow({
   meetingDescription,
   meetingTranscription,
   requirementsList,
+  requirementsListRejected,
+  onShowModal,
+  status
 }: ProcessDifyParams) {
   try {
+
     const wfResp = await callDifyWorkflow(
       projectId,
       meetingId,
@@ -52,95 +65,83 @@ export async function processDifyWorkflow({
       meetingTitle,
       meetingDescription,
       meetingTranscription,
-      requirementsList
+      requirementsList,
+      requirementsListRejected || [],
+      status
     );
-
     const updatedRequirementsList = wfResp?.updatedRequirementsList ?? [];
     const newRequirementsList = wfResp?.newRequirementsList ?? [];
 
-    for (const updated of updatedRequirementsList) {
-      const docRef = doc(firestore, "requirements", updated.id);
-      const snap = await getDoc(docRef);
-
-      if (!snap.exists()) {
-        console.warn(`🚫 ID no encontrado en Firestore: ${updated.id}`);
-        continue;
+    if (onShowModal && (updatedRequirementsList.length > 0 || newRequirementsList.length > 0)) {
+      const allRequirements = [...updatedRequirementsList, ...newRequirementsList].map(requirement => {
+        if(!requirement?.id) {
+          requirement.status = Status.PENDING;
+        }
+        return requirement;
+      })
+      
+      const requirementsNews = allRequirements.filter(requirement => !requirement.id);
+      
+      for (const requirement of requirementsNews) {
+        try {
+          const newRequirementResult = await dispatch(
+            createRequirement({
+              projectId,
+              title: requirement.title,
+              description: requirement.description,
+              priority: requirement.priority ?? Priority.MEDIUM,
+              status: Status.PENDING,
+              responsible: requirement.responsible,
+              origin: requirement.origin,
+              reason: requirement.reason,
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString(),
+            })
+          );
+        } catch (error) {
+          console.error({ error });
+        }
       }
-
-      const previousData = snap.data();
-      const previousState = {
-        id: snap.id,
-        projectId: previousData?.projectId || "",
-        title: previousData?.title || "",
-        description: previousData?.description || "",
-        priority: previousData?.priority || Priority.MEDIUM,
-        status: previousData?.status || Status.PENDING,
-        responsible: previousData?.responsible || "",
-        createdAt: previousData?.createdAt?.toDate().toISOString() || "",
-        updatedAt: previousData?.updatedAt?.toDate().toISOString() || "",
-      };
-
-      await dispatch(
-        updateRequirement({
-          id: updated.id,
-          updatedData: {
-            title: updated.title,
-            description: updated.description,
-            priority: updated.priority as Priority,
-            status: mapStatus(updated.status),
-            responsible: updated.responsible || "",
-            origin: updated.origin || "Dify",
-            reason: updated.reason || "",
-            updatedAt: new Date().toISOString(),
-          },
-        })
-      );
-
-      const historyRef = doc(collection(firestore, "requirements", updated.id, "history"));
-      await setDoc(historyRef, {
-        id: historyRef.id, // (opcional pero útil si querés guardar también el ID del historial)
-        requirementId: updated.id, // ⬅️ Esta es la línea clave
-        changedAt: Timestamp.now(),
-        meetingId,
-        origin: updated.origin || "Dify",
-        reason: updated.reason || "",
-        previousState,
-        newState: {
-          id: updated.id,
-          projectId: updated.projectId,
-          title: updated.title,
-          description: updated.description,
-          priority: updated.priority,
-          status: updated.status,
-          responsible: updated.responsible || "",
-          createdAt: updated.createdAt,
-          updatedAt: updated.updatedAt,
-        },
-      });
+      const requirements = await getProjectRequirements(projectId);
+      onShowModal(requirements, meetingTitle, meetingId, meetingDescription, meetingTranscription);
     }
 
-    for (const req of newRequirementsList) {
-      if (!req.title || !req.description) {
-        console.warn("⚠️ Requerimiento nuevo incompleto:", req);
-        continue;
-      }
+  } catch (error) {
+    console.error({error});
+  }
 
-      await dispatch(
-        createRequirement({
-          projectId,
-          title: req.title,
-          description: req.description,
-          priority: req.priority ?? Priority.MEDIUM,
-          status: mapStatus(req.status),
-          responsible: req.responsible || "",
-          origin: req.origin || "Dify",
-          reason: req.reason || "",
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        })
-      );
-    }
-  } catch (err) {
-    console.error("❌ Error en processDifyWorkflow:", err);
+
+}
+
+export async function getProjectRequirements(projectId: string): Promise<Requirement[]> {
+  try {
+    const q = query(
+      collection(firestore, "requirements"),
+      where("projectId", "==", projectId)
+    );
+
+    const snap = await getDocs(q);
+
+    const requirements = snap.docs.map((doc) => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        projectId: data.projectId,
+        title: data.title,
+        description: data.description ,
+        priority: data.priority,
+        status: data.status,
+        responsible: data.responsible,
+        reason: data.reason,
+        origin: data.origin,
+        createdAt: data.createdAt?.toDate?.()?.toISOString() ,
+        updatedAt: data.updatedAt?.toDate?.()?.toISOString(),
+      } as Requirement;
+    });
+    return requirements;
+
+  } catch (error) {
+    console.error({error});
+    throw error;
   }
 }

@@ -12,6 +12,7 @@
   "dependencies": {
     "@ant-design/icons": "^5.5.2",
     "@evyweb/ioctopus": "^1.2.0",
+    "@fortawesome/fontawesome-free": "^7.0.0",
     "@langchain/openai": "^0.4.4",
     "@react-pdf/renderer": "^4.2.2",
     "@reduxjs/toolkit": "^2.5.1",

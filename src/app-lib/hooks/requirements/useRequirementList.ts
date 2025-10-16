@@ -68,6 +68,15 @@ export const useRequirementList = () => {
     setDeleteId(null);
   };
 
+  const handleCancelEdit = () => {
+    setEditingId(null);
+    setTempTitle("");
+    setTempDescription("");
+    setTempPriority(Priority.MEDIUM);
+    setTempStatus(Status.IN_PROGRESS);
+    setTempResponsible("");
+  };
+
   return {
     editingId,
     tempTitle,
@@ -82,6 +91,7 @@ export const useRequirementList = () => {
     setTempStatus,
     setTempResponsible,
     handleEditClick,
+    handleCancelEdit,
     handleDeleteClick,
     confirmDelete,
     cancelDelete,

@@ -44,6 +44,7 @@ export const createRequirement = createAsyncThunk(
         origin: requirement.origin ?? "Dify",
         createdAt: timestamp,
         updatedAt: timestamp,
+        tags: requirement.tags
       });
 
       const newRequirement = {
@@ -54,6 +55,7 @@ export const createRequirement = createAsyncThunk(
         origin: requirement.origin ?? "Dify",
         createdAt: toISODate(timestamp),
         updatedAt: toISODate(timestamp),
+        tags: requirement.tags
       } as Requirement;
 
       return RequirementAdapter.toApp(RequirementAdapter.toDomain(newRequirement));

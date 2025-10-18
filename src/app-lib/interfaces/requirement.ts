@@ -21,10 +21,11 @@ export interface Requirement {
     description: string;
     priority: Priority;
     status: Status;
-    responsible?: string;   // ✅ nuevo
-    reason?: string;        // ✅ nuevo
-    origin?: string;        // ✅ nuevo
+    responsible?: string;   
+    reason?: string;        
+    origin?: string;        
     createdAt: string;
     updatedAt: string;
     deletedAt?: string;
+    tags?: string[];
 }

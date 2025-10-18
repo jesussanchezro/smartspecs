@@ -84,7 +84,7 @@ export async function processDifyWorkflow({
       
       for (const requirement of requirementsNews) {
         try {
-          const newRequirementResult = await dispatch(
+          await dispatch(
             createRequirement({
               projectId,
               title: requirement.title,
@@ -96,6 +96,7 @@ export async function processDifyWorkflow({
               reason: requirement.reason,
               createdAt: new Date().toISOString(),
               updatedAt: new Date().toISOString(),
+              tags: requirement.tags
             })
           );
         } catch (error) {
@@ -136,6 +137,7 @@ export async function getProjectRequirements(projectId: string): Promise<Require
         origin: data.origin,
         createdAt: data.createdAt?.toDate?.()?.toISOString() ,
         updatedAt: data.updatedAt?.toDate?.()?.toISOString(),
+        tags: data.tags
       } as Requirement;
     });
     return requirements;

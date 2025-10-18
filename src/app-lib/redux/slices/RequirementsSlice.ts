@@ -264,6 +264,7 @@ export const getApprovedRequirementsByProject = createAsyncThunk(
           createdAt: toISODate(data.createdAt),
           updatedAt: toISODate(data.updatedAt),
           deletedAt: data.deletedAt ? toISODate(data.deletedAt) : undefined,
+          tags: data.tags || [],
         } as Requirement;
 
         // show only not deleted requirements

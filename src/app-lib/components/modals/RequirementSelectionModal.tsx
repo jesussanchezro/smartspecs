@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Requirement, Status, RequirementAction } from "@/smartspecs/app-lib/interfaces/requirement";
 import { useAppDispatch } from "@/smartspecs/app-lib/hooks/useAppDispatch";
 import { updateRequirement } from "@/smartspecs/app-lib/redux/slices/RequirementsSlice";
+import RequirementTags from "@/smartspecs/app-lib/components/lists/requirements-list/RequirementTags";
 
 interface RequirementSelectionModalProps {
   isOpen: boolean;
@@ -231,12 +232,11 @@ const RequirementSelectionModal: React.FC<RequirementSelectionModalProps> = ({
                     </div>
                   }
                 </div>
-                <div className="flex items-start space-x-2 mt-2 flex-wrap">
-                  {requirement.tags?.map((tag) => (
-                    <span className={'inline-flex items-center px-2 py-1 rounded-md text-xs bg-sky-200 text-sky-800'}>
-                    {tag}
-                  </span>
-                  ))}
+                <div className="mt-2">
+                  <RequirementTags
+                    tags={requirement.tags || []}
+                    isEditing={false}
+                  />
                 </div>
               </div>
             ))

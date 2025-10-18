@@ -131,6 +131,7 @@ export const updateRequirement = createAsyncThunk(
         origin: data.origin || "Dify",
         createdAt: toISODate(data.createdAt),
         updatedAt: toISODate(data.updatedAt),
+        tags: data.tags || [],
       } as Requirement;
 
       return RequirementAdapter.toApp(RequirementAdapter.toDomain(requirement));

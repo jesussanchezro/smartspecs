@@ -37,7 +37,7 @@ const RequirementTags: React.FC<RequirementTagsProps> = ({
 
   return (
     <div className="flex items-start space-x-2">
-      <div className="flex flex-wrap gap-2 flex-1">
+      <div className="flex flex-wrap gap-2">
         {tags && tags.length > 0 ? (
           tags.map((tag, index) => (
             <span
@@ -81,14 +81,6 @@ const RequirementTags: React.FC<RequirementTagsProps> = ({
             placeholder="Add tag..."
             className="px-2 py-1 text-xs border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all w-32"
           />
-          <button
-            onClick={handleAddTag}
-            disabled={!inputValue.trim()}
-            className="px-2 py-1 text-xs font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all focus:outline-none focus:ring-2 focus:ring-blue-500"
-            type="button"
-          >
-            <i className="fas fa-plus"></i>
-          </button>
         </div>
       )}
     </div>

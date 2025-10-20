@@ -2,13 +2,14 @@ import React, { useState, useEffect } from "react";
 import { Requirement, Status, RequirementAction } from "@/smartspecs/app-lib/interfaces/requirement";
 import { useAppDispatch } from "@/smartspecs/app-lib/hooks/useAppDispatch";
 import { updateRequirement } from "@/smartspecs/app-lib/redux/slices/RequirementsSlice";
+import RequirementTags from "@/smartspecs/app-lib/components/lists/requirements-list/RequirementTags";
 
 interface RequirementSelectionModalProps {
   isOpen: boolean;
   onClose: () => void;
   meetingTitle: string;
   requirements: Requirement[];
-  onSend: (selectedRequirements: Requirement[]) => void;
+  onSend: (selectedRequirements: Requirement[], hasRequirementsToRefine: boolean) => void;
 }
 
 const RequirementSelectionModal: React.FC<RequirementSelectionModalProps> = ({
@@ -100,9 +101,8 @@ const RequirementSelectionModal: React.FC<RequirementSelectionModalProps> = ({
         .filter(requirement => requirementActions[requirement.id] === 'refine')
       
       // only send to dify the requirements to refine
-      if (requirementsToRefine.length > 0) {
-        onSend(requirementsToRefine);  
-      }
+      const hasRequirementsToRefine = requirementsToRefine.length > 0;
+      onSend(requirementsToRefine, hasRequirementsToRefine); 
       
       onClose();
     } catch (error) {
@@ -174,7 +174,7 @@ const RequirementSelectionModal: React.FC<RequirementSelectionModalProps> = ({
             activeRequirements.map((requirement) => (
               <div
                 key={requirement.id}
-                className={`flex items-start space-x-3 p-3 border border-gray-200 rounded-lg transition-colors ${
+                className={`space-x-3 p-2 border border-gray-200 rounded-lg transition-colors ${
                   activeTab === 'pending' 
                     ? 'hover:bg-gray-50' 
                     : ''
@@ -183,54 +183,60 @@ const RequirementSelectionModal: React.FC<RequirementSelectionModalProps> = ({
                 {activeTab !== 'pending' && (
                   <div className="w-4"></div>
                 )}
-                
-                <div className="flex-1">
-                  <h3 className="font-medium text-gray-900">{requirement.title}</h3>
-                  <p className="text-sm text-gray-600 mt-1">{requirement.description}</p>
-                  <div className="flex space-x-2 mt-2">
-                    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                      requirement.priority === 'high' 
-                        ? 'bg-red-100 text-red-800' 
-                        : requirement.priority === 'medium'
-                        ? 'bg-yellow-100 text-yellow-800'
-                        : 'bg-green-100 text-green-800'
-                    }`}>
-                      {requirement.priority}
-                    </span>
-                    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                      requirement.status === Status.DONE 
-                        ? 'bg-green-100 text-green-800' 
-                        : requirement.status === Status.REJECTED
-                        ? 'bg-red-100 text-red-800'
-                        : 'bg-orange-100 text-orange-800'
-                    }`}>
-                      {requirement.status}
-                    </span>
+                <div className="flex items-start space-x-2 p-2">
+                  <div className="flex-1">
+                    <h3 className="font-medium text-gray-900">{requirement.title}</h3>
+                    <p className="text-sm text-gray-600 mt-1">{requirement.description}</p>
+                    <div className="flex space-x-2 mt-2">
+                      <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                        requirement.priority === 'high' 
+                          ? 'bg-red-100 text-red-800' 
+                          : requirement.priority === 'medium'
+                          ? 'bg-yellow-100 text-yellow-800'
+                          : 'bg-green-100 text-green-800'
+                      }`}>
+                        {requirement.priority}
+                      </span>
+                      <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                        requirement.status === Status.DONE 
+                          ? 'bg-green-100 text-green-800' 
+                          : requirement.status === Status.REJECTED
+                          ? 'bg-red-100 text-red-800'
+                          : 'bg-orange-100 text-orange-800'
+                      }`}>
+                        {requirement.status}
+                      </span>
+                    </div>
                   </div>
+                  { activeTab === 'pending' &&
+                    <div className="flex-shrink-0">
+                      <select
+                        value={requirementActions[requirement.id] || 'approve'}
+                        onChange={(e) => handleActionChange(requirement.id, e.target.value as RequirementAction)}
+                        onClick={(e) => e.stopPropagation()}
+                        className={`px-3 py-1.5 text-sm font-medium border rounded-md focus:outline-none focus:ring-2 transition-colors ${
+                          requirementActions[requirement.id] === 'approve'
+                            ? 'border-green-300 bg-green-50 text-green-700 focus:ring-green-500'
+                            : requirementActions[requirement.id] === 'reject'
+                            ? 'border-red-300 bg-red-50 text-red-700 focus:ring-red-500'
+                            : requirementActions[requirement.id] === 'refine'
+                            ? 'border-blue-300 bg-blue-50 text-blue-700 focus:ring-blue-500'
+                            : 'border-green-300 bg-green-50 text-green-700 focus:ring-green-500'
+                        }`}
+                      >
+                        <option value="approve">Approve</option>
+                        <option value="reject">Reject</option>
+                        <option value="refine">Refine</option>
+                      </select>
+                    </div>
+                  }
                 </div>
-
-                { activeTab === 'pending' &&
-                  <div className="flex-shrink-0">
-                    <select
-                      value={requirementActions[requirement.id] || 'approve'}
-                      onChange={(e) => handleActionChange(requirement.id, e.target.value as RequirementAction)}
-                      onClick={(e) => e.stopPropagation()}
-                      className={`px-3 py-1.5 text-sm font-medium border rounded-md focus:outline-none focus:ring-2 transition-colors ${
-                        requirementActions[requirement.id] === 'approve'
-                          ? 'border-green-300 bg-green-50 text-green-700 focus:ring-green-500'
-                          : requirementActions[requirement.id] === 'reject'
-                          ? 'border-red-300 bg-red-50 text-red-700 focus:ring-red-500'
-                          : requirementActions[requirement.id] === 'refine'
-                          ? 'border-blue-300 bg-blue-50 text-blue-700 focus:ring-blue-500'
-                          : 'border-green-300 bg-green-50 text-green-700 focus:ring-green-500'
-                      }`}
-                    >
-                      <option value="approve">Approve</option>
-                      <option value="reject">Reject</option>
-                      <option value="refine">Refine</option>
-                    </select>
-                  </div>
-                }
+                <div className="mt-2">
+                  <RequirementTags
+                    tags={requirement.tags || []}
+                    isEditing={false}
+                  />
+                </div>
               </div>
             ))
           )}

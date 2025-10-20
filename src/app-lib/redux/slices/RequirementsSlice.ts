@@ -44,6 +44,7 @@ export const createRequirement = createAsyncThunk(
         origin: requirement.origin ?? "Dify",
         createdAt: timestamp,
         updatedAt: timestamp,
+        tags: requirement.tags
       });
 
       const newRequirement = {
@@ -54,6 +55,7 @@ export const createRequirement = createAsyncThunk(
         origin: requirement.origin ?? "Dify",
         createdAt: toISODate(timestamp),
         updatedAt: toISODate(timestamp),
+        tags: requirement.tags
       } as Requirement;
 
       return RequirementAdapter.toApp(RequirementAdapter.toDomain(newRequirement));
@@ -129,6 +131,7 @@ export const updateRequirement = createAsyncThunk(
         origin: data.origin || "Dify",
         createdAt: toISODate(data.createdAt),
         updatedAt: toISODate(data.updatedAt),
+        tags: data.tags || [],
       } as Requirement;
 
       return RequirementAdapter.toApp(RequirementAdapter.toDomain(requirement));
@@ -262,6 +265,7 @@ export const getApprovedRequirementsByProject = createAsyncThunk(
           createdAt: toISODate(data.createdAt),
           updatedAt: toISODate(data.updatedAt),
           deletedAt: data.deletedAt ? toISODate(data.deletedAt) : undefined,
+          tags: data.tags || [],
         } as Requirement;
 
         // show only not deleted requirements

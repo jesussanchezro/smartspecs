@@ -5,6 +5,7 @@ import ConfirmModal from "../../modals/ConfirmModal";
 import { Requirement, Priority } from "@/smartspecs/app-lib/interfaces/requirement";
 import { useRequirementList } from "@/smartspecs/app-lib/hooks/requirements/useRequirementList";
 import { useRequirementHistory } from "@/smartspecs/app-lib/hooks/requirements/useRequirementsHistory";
+import RequirementTags from "./RequirementTags";
 
 interface RequirementListProps {
   requirements: Requirement[];
@@ -18,12 +19,14 @@ const RequirementList: React.FC<RequirementListProps> = ({ requirements }) => {
     tempPriority,
     tempStatus,
     tempResponsible,
+    tempTags,
     showDeleteModal,
     setTempTitle,
     setTempDescription,
     setTempPriority,
     setTempStatus,
     setTempResponsible,
+    setTempTags,
     handleEditClick,
     handleCancelEdit,
     handleDeleteClick,
@@ -90,6 +93,15 @@ const RequirementList: React.FC<RequirementListProps> = ({ requirements }) => {
 
               {/* Botón Ver Historial */}
               <tr className="bg-gray-50/50">
+                <td colSpan={1}></td>
+                <td colSpan={2}>
+                  <RequirementTags
+                    /*tags={requirement.tags || []}*/
+                    tags={editingId === requirement.id ? tempTags : (requirement.tags || [])}
+                    isEditing={editingId === requirement.id}
+                    onTagsChange={setTempTags}
+                  />
+                </td>
                 <td colSpan={9} className="px-4 py-2 text-right">
                   <button
                     className="inline-flex items-center text-sm text-blue-600 hover:text-blue-700 font-medium transition-all duration-200 ease-in-out hover:scale-105 active:scale-95"

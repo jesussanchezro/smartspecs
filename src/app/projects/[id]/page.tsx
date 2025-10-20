@@ -116,7 +116,7 @@ const ProjectDetail: React.FC = () => {
     setShowRequirementsSelectionModal(true);
   };
 
-  const handleSendSelectedRequirements = async (selectedRequirements: Requirement[]) => {
+  const handleSendSelectedRequirements = async (selectedRequirements: Requirement[], hasRequirementsToRefine: boolean) => {
     if (project?.id) {
       const unselectedRequirements = requirementsToProcess.filter(
         requirement => !selectedRequirements.some(selected => selected.id === requirement.id)
@@ -125,21 +125,23 @@ const ProjectDetail: React.FC = () => {
       setIsRequirementsProcessing(true);
       
       try {
-        await processDifyWorkflow({
-          dispatch,
-          projectId: project.id,
-          meetingId: meetingInfoForModal.meetingId,
-          projectTitle: project.title,
-          projectDescription: project.description,
-          projectClient: project.client,
-          meetingTitle: meetingInfoForModal.meetingTitle,
-          meetingDescription: meetingInfoForModal.meetingDescription,
-          meetingTranscription: meetingInfoForModal.meetingTranscription,
-          requirementsList: selectedRequirements,
-          requirementsListRejected: unselectedRequirements,
-          onShowModal: handleShowRequirementsModal,
-          status: "refine"
-        });
+        if (hasRequirementsToRefine) {
+          await processDifyWorkflow({
+            dispatch,
+            projectId: project.id,
+            meetingId: meetingInfoForModal.meetingId,
+            projectTitle: project.title,
+            projectDescription: project.description,
+            projectClient: project.client,
+            meetingTitle: meetingInfoForModal.meetingTitle,
+            meetingDescription: meetingInfoForModal.meetingDescription,
+            meetingTranscription: meetingInfoForModal.meetingTranscription,
+            requirementsList: selectedRequirements,
+            requirementsListRejected: unselectedRequirements,
+            onShowModal: handleShowRequirementsModal,
+            status: "refine"
+          });
+        }
 
         await dispatch(getApprovedRequirementsByProject(project.id));
       } finally {

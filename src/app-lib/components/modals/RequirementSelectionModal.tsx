@@ -9,7 +9,7 @@ interface RequirementSelectionModalProps {
   onClose: () => void;
   meetingTitle: string;
   requirements: Requirement[];
-  onSend: (selectedRequirements: Requirement[]) => void;
+  onSend: (selectedRequirements: Requirement[], hasRequirementsToRefine: boolean) => void;
 }
 
 const RequirementSelectionModal: React.FC<RequirementSelectionModalProps> = ({
@@ -101,9 +101,8 @@ const RequirementSelectionModal: React.FC<RequirementSelectionModalProps> = ({
         .filter(requirement => requirementActions[requirement.id] === 'refine')
       
       // only send to dify the requirements to refine
-      if (requirementsToRefine.length > 0) {
-        onSend(requirementsToRefine);  
-      }
+      const hasRequirementsToRefine = requirementsToRefine.length > 0;
+      onSend(requirementsToRefine, hasRequirementsToRefine); 
       
       onClose();
     } catch (error) {

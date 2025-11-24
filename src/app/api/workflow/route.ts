@@ -32,6 +32,7 @@ export async function POST(req: Request) {
         workflow_id: workflow_id ?? DEFAULT_WORKFLOW_ID,
         response_mode: "streaming",
       }),
+      // @ts-expect-error - duplex is required for streaming but not in RequestInit type yet
       duplex: "half"
     });
 

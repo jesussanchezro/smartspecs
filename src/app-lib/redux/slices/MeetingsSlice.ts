@@ -4,12 +4,12 @@ import {
   getDocs,
   addDoc,
   updateDoc,
-  deleteDoc,
   doc,
   getDoc,
   query,
   where,
   Timestamp,
+  deleteDoc,
 } from "firebase/firestore";
 import { firestore } from "@/smartspecs/lib/config/firebase-settings";
 import { toISODate } from "@/smartspecs/app-lib/utils/firestoreTimeStamps";
@@ -93,7 +93,11 @@ export const deleteMeeting = createAsyncThunk(
   "meetings/deleteMeeting",
   async (meetingId: string, { rejectWithValue }) => {
     try {
-      await deleteDoc(doc(firestore, "meetings", meetingId));
+      // use soft-deletion for meeting
+      const timestamp = Timestamp.now();
+      await updateDoc(doc(firestore, "meetings", meetingId), {
+        deletedAt: timestamp,
+      });
       return meetingId;
     } catch (error) {
       console.error("❌ Error eliminando reunión:", error);
@@ -142,9 +146,10 @@ export const getMeetingsByProject = createAsyncThunk(
 
       const snap = await getDocs(q);
 
-      const meetings: Meeting[] = snap.docs.map((doc) => {
+      const meetings: Meeting[] = []
+      snap.docs.map((doc) => {
         const data = doc.data();
-        return {
+        const meeting = {
           id: doc.id,
           projectId: data.projectId,
           title: data.title ?? "",
@@ -152,13 +157,48 @@ export const getMeetingsByProject = createAsyncThunk(
           transcription: data.transcription ?? "",
           createdAt: toISODate(data.createdAt),
           updatedAt: toISODate(data.updatedAt),
+          deletedAt: data.deletedAt ? toISODate(data.deletedAt) : undefined,
         };
+
+        // show only not deleted meetings
+        if (meeting.deletedAt === undefined) {
+          meetings.push(meeting);
+        }
       });
 
       return meetings;
     } catch (error) {
       console.error("❌ Error al obtener reuniones del proyecto:", error);
       return rejectWithValue("Error al obtener reuniones");
+    }
+  }
+);
+
+// Eliminar todas las reuniones de un proyecto
+export const deleteAllMeetingsByProject = createAsyncThunk(
+  "meetings/deleteAllMeetingsByProject",
+  async (projectId: string, { rejectWithValue }) => {
+    try {
+      const q = query(
+        collection(firestore, "meetings"),
+        where("projectId", "==", projectId)
+      );
+
+      const snap = await getDocs(q);
+      const timestamp = Timestamp.now();
+      // use soft-deletion for all documents found
+      const deletePromises = snap.docs.map((docSnapshot) =>
+        updateDoc(doc(firestore, "meetings", docSnapshot.id), {
+          deletedAt: timestamp,
+        })            
+      );
+
+      await Promise.all(deletePromises);
+
+      return projectId;
+    } catch (error) {
+      console.error("❌ Error eliminando todas las reuniones:", error);
+      return rejectWithValue("Error al eliminar reuniones");
     }
   }
 );
@@ -239,6 +279,20 @@ const meetingsSlice = createSlice({
         state.meetings = state.meetings.filter((m) => m.id !== action.payload);
       })
       .addCase(deleteMeeting.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+
+      .addCase(deleteAllMeetingsByProject.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(deleteAllMeetingsByProject.fulfilled, (state, action: PayloadAction<string>) => {
+        state.loading = false;
+        // Clear all meetings for the specified project
+        state.meetings = state.meetings.filter((m) => m.projectId !== action.payload);
+      })
+      .addCase(deleteAllMeetingsByProject.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
       });

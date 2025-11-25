@@ -198,6 +198,7 @@ const PendingMeetingsView: React.FC = () => {
         meetingDescription: pendingMeeting.description,
         meetingTranscription: pendingMeeting.transcription,
         requirementsList: existingRequirements,
+        status: "new"
       });
 
       // 6. Delete the pending meeting

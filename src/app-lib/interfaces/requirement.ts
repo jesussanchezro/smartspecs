@@ -1,7 +1,9 @@
 export enum Status {
     IN_PROGRESS = "in progress",
+    TO_DO = "to do",
     DONE = "done",
     PENDING = "pending",
+    REJECTED = "rejected",
 }
 
 export enum Priority {
@@ -10,6 +12,8 @@ export enum Priority {
     HIGH = "high",
 }
 
+export type RequirementAction = 'approve' | 'reject' | 'refine' | null;
+
 export interface Requirement {
     id: string;
     projectId: string;
@@ -17,9 +21,11 @@ export interface Requirement {
     description: string;
     priority: Priority;
     status: Status;
-    responsible?: string;   // ✅ nuevo
-    reason?: string;        // ✅ nuevo
-    origin?: string;        // ✅ nuevo
+    responsible?: string;   
+    reason?: string;        
+    origin?: string;        
     createdAt: string;
     updatedAt: string;
+    deletedAt?: string;
+    tags?: string[];
 }

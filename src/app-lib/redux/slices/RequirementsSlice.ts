@@ -4,7 +4,6 @@ import {
   getDocs,
   addDoc,
   updateDoc,
-  deleteDoc,
   doc,
   getDoc,
   query,
@@ -38,7 +37,6 @@ export const createRequirement = createAsyncThunk(
     try {
       const timestamp = Timestamp.now();
 
-      console.log("requirement", requirement);
       const docRef = await addDoc(collection(firestore, "requirements"), {
         ...requirement,
         responsible: requirement.responsible ?? "",
@@ -46,6 +44,7 @@ export const createRequirement = createAsyncThunk(
         origin: requirement.origin ?? "Dify",
         createdAt: timestamp,
         updatedAt: timestamp,
+        tags: requirement.tags
       });
 
       const newRequirement = {
@@ -56,6 +55,7 @@ export const createRequirement = createAsyncThunk(
         origin: requirement.origin ?? "Dify",
         createdAt: toISODate(timestamp),
         updatedAt: toISODate(timestamp),
+        tags: requirement.tags
       } as Requirement;
 
       return RequirementAdapter.toApp(RequirementAdapter.toDomain(newRequirement));
@@ -131,6 +131,7 @@ export const updateRequirement = createAsyncThunk(
         origin: data.origin || "Dify",
         createdAt: toISODate(data.createdAt),
         updatedAt: toISODate(data.updatedAt),
+        tags: data.tags || [],
       } as Requirement;
 
       return RequirementAdapter.toApp(RequirementAdapter.toDomain(requirement));
@@ -146,8 +147,15 @@ export const deleteRequirement = createAsyncThunk(
   "requirements/deleteRequirement",
   async (id: string, { rejectWithValue }) => {
     try {
-      await deleteDoc(doc(firestore, "requirements", id));
+      // use soft-deletion for requirement
+      const docRef = doc(firestore, "requirements", id);
+      const timestamp = Timestamp.now();
+
+      await updateDoc(docRef, {
+        deletedAt: timestamp,
+      });
       return id;
+
     } catch (error) {
       console.error("Error deleting requirement:", error);
       return rejectWithValue("Error al eliminar requerimiento");
@@ -196,7 +204,8 @@ export const getRequirementsByProject = createAsyncThunk(
     try {
       const q = query(
         collection(firestore, "requirements"),
-        where("projectId", "==", projectId)
+        where("projectId", "==", projectId),
+        where("deletedAt", "==", null)
       );
 
       const snap = await getDocs(q);
@@ -224,6 +233,91 @@ export const getRequirementsByProject = createAsyncThunk(
     } catch (error) {
       console.error("Error fetching requirements:", error);
       return rejectWithValue("Error al obtener requerimientos");
+    }
+  }
+);
+
+export const getApprovedRequirementsByProject = createAsyncThunk(
+  "requirements/getRequirementsByProject",
+  async (projectId: string, { rejectWithValue }) => {
+    try {
+      const q = query(
+        collection(firestore, "requirements"),
+        where("projectId", "==", projectId),
+        where("status", "in", [Status.TO_DO, Status.IN_PROGRESS, Status.DONE]),
+      );
+
+      const snap = await getDocs(q);
+      const requirements: Requirement[] = [];
+      
+      snap.docs.forEach((doc) => {
+        const data = doc.data();
+        const requirement = {
+          id: doc.id,
+          projectId: data.projectId || data.project_id,
+          title: data.title || "Untitled",
+          description: data.description || "",
+          priority: data.priority || "medium",
+          status: data.status || Status.IN_PROGRESS,
+          responsible: data.responsible || "",
+          reason: data.reason || "",
+          origin: data.origin || "Dify",
+          createdAt: toISODate(data.createdAt),
+          updatedAt: toISODate(data.updatedAt),
+          deletedAt: data.deletedAt ? toISODate(data.deletedAt) : undefined,
+          tags: data.tags || [],
+        } as Requirement;
+
+        // show only not deleted requirements
+        if (requirement.deletedAt === undefined) {
+          requirements.push(RequirementAdapter.toApp(RequirementAdapter.toDomain(requirement)));
+        }
+      });
+
+      return requirements;
+    } catch (error) {
+      console.error("Error fetching requirements:", error);
+      return rejectWithValue("Error al obtener requerimientos");
+    }
+  }
+);
+
+// Obtener TODOS los requerimientos por proyecto (para casos especiales)
+export const getAllRequirementsByProject = createAsyncThunk(
+  "requirements/getAllRequirementsByProject",
+  async (projectId: string, { rejectWithValue }) => {
+    try {      
+      const q = query(
+        collection(firestore, "requirements"),
+        where("projectId", "==", projectId)
+      );
+
+      const snap = await getDocs(q);
+      const requirements: Requirement[] = []
+
+      snap.docs.map((doc) => {
+        const data = doc.data();
+        const requirement = {
+          id: doc.id,
+          projectId: data.projectId || data.project_id,
+          title: data.title || "Untitled",
+          description: data.description || "",
+          priority: data.priority || "medium",
+          status: data.status || Status.IN_PROGRESS,
+          responsible: data.responsible || "",
+          reason: data.reason || "",
+          origin: data.origin || "Dify",
+          createdAt: toISODate(data.createdAt),
+          updatedAt: toISODate(data.updatedAt),
+        } as Requirement;
+
+        return RequirementAdapter.toApp(RequirementAdapter.toDomain(requirement));
+      });
+
+      return requirements;
+    } catch (error) {
+      console.error("Error loading requirements:", {error});
+      return rejectWithValue("Error loading requirements");
     }
   }
 );

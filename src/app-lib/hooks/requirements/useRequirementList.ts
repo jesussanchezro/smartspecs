@@ -14,6 +14,7 @@ export const useRequirementList = () => {
   const [tempPriority, setTempPriority] = useState<Priority>(Priority.MEDIUM);
   const [tempStatus, setTempStatus] = useState<Status>(Status.IN_PROGRESS);
   const [tempResponsible, setTempResponsible] = useState("");
+  const [tempTags, setTempTags] = useState<string[]>([]);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
@@ -32,6 +33,7 @@ export const useRequirementList = () => {
             priority: tempPriority as Priority,
             status: tempStatus,
             responsible: tempResponsible,
+            tags: tempTags,
             origin: "Manual",
             // No incluimos reason aquí para mantener el original
             updatedAt: new Date().toISOString(),
@@ -48,6 +50,7 @@ export const useRequirementList = () => {
       setTempPriority(req.priority);
       setTempStatus(req.status);
       setTempResponsible(req.responsible || "");
+      setTempTags(req.tags || []);
     }
   };
 
@@ -68,6 +71,16 @@ export const useRequirementList = () => {
     setDeleteId(null);
   };
 
+  const handleCancelEdit = () => {
+    setEditingId(null);
+    setTempTitle("");
+    setTempDescription("");
+    setTempPriority(Priority.MEDIUM);
+    setTempStatus(Status.IN_PROGRESS);
+    setTempResponsible("");
+    setTempTags([]);
+  };
+
   return {
     editingId,
     tempTitle,
@@ -75,13 +88,16 @@ export const useRequirementList = () => {
     tempPriority,
     tempStatus,
     tempResponsible,
+    tempTags,
     showDeleteModal,
     setTempTitle,
     setTempDescription,
     setTempPriority,
     setTempStatus,
     setTempResponsible,
+    setTempTags,
     handleEditClick,
+    handleCancelEdit,
     handleDeleteClick,
     confirmDelete,
     cancelDelete,

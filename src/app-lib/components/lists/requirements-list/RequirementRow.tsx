@@ -16,6 +16,7 @@ interface RequirementRowProps {
   onStatusChange: (value: Status) => void;
   onResponsibleChange: (value: string) => void;
   onEditClick: () => void;
+  onCancelEdit: () => void;
   onDeleteClick: () => void;
 }
 
@@ -34,6 +35,7 @@ const RequirementRow: React.FC<RequirementRowProps> = ({
   onStatusChange,
   onResponsibleChange,
   onEditClick,
+  onCancelEdit,
   onDeleteClick,
 }) => {
   const [showTooltip, setShowTooltip] = useState(false);
@@ -113,7 +115,7 @@ const RequirementRow: React.FC<RequirementRowProps> = ({
             style={{ minHeight: "100px" }}
           />
         ) : (
-          <div className="text-gray-500">{requirement.description}</div>
+          <div style={{ maxWidth: 700 }} className="text-gray-500">{requirement.description}</div>
         )}
       </td>
 
@@ -156,18 +158,26 @@ const RequirementRow: React.FC<RequirementRowProps> = ({
             <option value={Status.IN_PROGRESS}>In Progress</option>
             <option value={Status.DONE}>Done</option>
             <option value={Status.PENDING}>Pending</option>
+            <option value={Status.TO_DO}>To Do</option>
+            <option value={Status.REJECTED}>Rejected</option>
           </select>
         ) : (
           <span className={`inline-flex items-center px-2 py-0.5 rounded-full font-medium ${requirement.status === Status.DONE
               ? 'bg-green-100 text-green-800'
-              : requirement.status === Status.IN_PROGRESS
+              : requirement.status === Status.IN_PROGRESS || requirement.status === Status.TO_DO
                 ? 'bg-blue-100 text-blue-800'
-                : 'bg-red-100 text-red-800'
+                : requirement.status === Status.REJECTED
+                ? 'bg-red-100 text-red-800'
+                : 'bg-orange-100 text-orange-800'
             }`}>
             {requirement.status === Status.DONE
               ? 'Done'
               : requirement.status === Status.IN_PROGRESS
                 ? 'In Progress'
+                : requirement.status === Status.TO_DO
+                ? 'To Do'
+                : requirement.status === Status.REJECTED
+                ? 'Rejected'
                 : 'Pending'}
           </span>
         )}
@@ -190,11 +200,22 @@ const RequirementRow: React.FC<RequirementRowProps> = ({
 
       {/* Origen */}
       <td className="px-2 py-2 text-gray-700">
-        {requirement.origin || <span className="italic text-gray-400">Not registered</span>}
+        {requirement.origin ? (
+          <div className="flex items-center space-x-2">
+            <i className={`text-lg ${
+              requirement.origin === 'Dify' 
+                ? 'fas fa-robot text-green-600' 
+                : 'fas fa-user text-blue-600'
+            }`}></i>
+            <span className="capitalize">{requirement.origin}</span>
+          </div>
+        ) : (
+          <span className="italic text-gray-400">Not registered</span>
+        )}
       </td>
 
       {/* Razón */}
-      <td className="px-2 py-2 text-gray-700 tooltip-container">
+      <td className="px-2 py-2 text-gray-700">
         {requirement.reason ? (
           <div 
             ref={iconRef}
@@ -202,9 +223,7 @@ const RequirementRow: React.FC<RequirementRowProps> = ({
             onMouseEnter={() => setShowTooltip(true)}
             onMouseLeave={() => setShowTooltip(false)}
           >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
+            <i className="fas fa-info-circle h-5 w-5"></i>
           </div>
         ) : (
           <span className="italic text-gray-400">No reason</span>
@@ -213,19 +232,32 @@ const RequirementRow: React.FC<RequirementRowProps> = ({
 
       {/* Acciones */}
       <td className="px-2 py-2">
-        <div className="flex items-center space-x-1">
+        <div className="inline-flex rounded-md shadow-sm" role="group">
           <button
-            className={`px-2 py-1 rounded-md text-sm font-medium ${isEditing ? 'bg-green-500 hover:bg-green-600 text-white' : 'bg-blue-500 hover:bg-blue-600 text-white'
-              } transition-all`}
+            className={`px-3 py-1.5 text-sm font-medium border transition-all ${
+              isEditing 
+                ? 'bg-green-500 hover:bg-green-600 text-white border-green-500' 
+                : 'bg-primary hover:bg-primary/90 text-white border-primary'
+            } ${isEditing ? 'rounded-l-md' : 'rounded-l-md'}`}
             onClick={onEditClick}
           >
-            {isEditing ? "💾" : "✏️"}
+            {isEditing ? <i className="fas fa-save"></i> : <i className="fas fa-edit"></i>}
           </button>
+          {isEditing && (
+            <button
+              className="px-3 py-1.5 bg-gray-500 hover:bg-gray-600 text-white text-sm font-medium border border-gray-500 transition-all"
+              onClick={onCancelEdit}
+            >
+              <i className="fas fa-cancel"></i>
+            </button>
+          )}
           <button
-            className="px-2 py-1 bg-red-400 hover:bg-red-500 text-white rounded-md text-sm font-medium transition-all"
+            className={`px-3 py-1.5 bg-red-500 hover:bg-red-600 text-white text-sm font-medium border border-red-500 transition-all ${
+              isEditing ? 'rounded-r-md' : 'rounded-r-md'
+            }`}
             onClick={onDeleteClick}
           >
-            🗑️
+            <i className="fas fa-trash"></i>
           </button>
         </div>
       </td>

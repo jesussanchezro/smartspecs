@@ -17,6 +17,7 @@ export class RequirementAdapter {
       status: appRequirement.status as DomainStatus,
       priority: appRequirement.priority,
       reason: appRequirement.reason,
+      tags: appRequirement.tags || [],
       items: [],
       audioUrl: undefined,
       text: undefined,
@@ -38,6 +39,7 @@ export class RequirementAdapter {
       reason: domainRequirement.reason || "",
       status: domainRequirement.status as AppStatus,
       priority: domainRequirement.priority,
+      tags: domainRequirement.tags || [],
     };
   }
 } 

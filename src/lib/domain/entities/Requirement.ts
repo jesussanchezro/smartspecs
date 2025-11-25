@@ -23,4 +23,5 @@ export type Requirement = {
   items?: RequirementItem[];
   priority: Priority;
   reason?: string;
+  tags?: string[];
 };

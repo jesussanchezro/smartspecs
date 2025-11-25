@@ -6,6 +6,7 @@ interface MeetingFormProps {
   onCancel: () => void;
   onSaveSuccess?: () => void;
   onProcessingStart?: () => void;
+  onShowRequirementsModal?: (requirements: any[], meetingTitle: string) => void;
 
   // Si es edición, pasamos la meeting
   meeting?: Meeting;
@@ -23,6 +24,7 @@ const MeetingForm: React.FC<MeetingFormProps> = ({
   onCancel,
   onSaveSuccess,
   onProcessingStart,
+  onShowRequirementsModal,
   projectId,
   projectTitle,
   projectDescription,
@@ -53,6 +55,7 @@ const MeetingForm: React.FC<MeetingFormProps> = ({
     onSaveSuccess,
     onCancel,
     onProcessingStart,
+    onShowRequirementsModal
   });
 
   // Para indicar si es edición en la UI
@@ -80,8 +83,9 @@ const MeetingForm: React.FC<MeetingFormProps> = ({
             type="button"
             onClick={handleLoadFromFireflies}
             disabled={!firefliesTranscriptId || isLoadingFireflies}
-            className="px-4 py-2 text-sm font-medium text-white bg-blue-500 rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-4 py-2 text-sm font-medium text-white bg-blue-500 rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
           >
+            <i className="fas fa-download"></i>
             {isLoadingFireflies ? "Loading..." : "Load meeting data"}
           </button>
         </div>
@@ -182,15 +186,17 @@ const MeetingForm: React.FC<MeetingFormProps> = ({
         <button
           type="button"
           onClick={onCancel}
-          className="px-6 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 transition-colors duration-200"
+          className="px-6 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 transition-colors duration-200 flex items-center gap-2"
         >
+          <i className="fas fa-cancel"></i>
           Cancel
         </button>
         <button
           type="submit"
-          className="px-6 py-2 text-sm font-medium text-white bg-primary rounded-md hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="px-6 py-2 text-sm font-medium text-white bg-primary rounded-md hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
           disabled={isLoading || isLoadingFireflies || !title || !transcription}
         >
+          <i className="fas fa-save"></i>
           {isLoading
             ? isEditMode
               ? "Saving..."

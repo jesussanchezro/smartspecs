@@ -60,6 +60,18 @@ const RequirementForm: React.FC<RequirementFormProps> = ({
       } else {
         // Create new requirement
         const now = new Date().toISOString();
+        console.log({
+          projectId,
+          title,
+          description,
+          priority,
+          status,
+          responsible,
+          reason,
+          origin: origin || "Manual",
+          createdAt: now,
+          updatedAt: now
+        })
         await dispatch(createRequirement({
           projectId,
           title,
@@ -135,6 +147,7 @@ const RequirementForm: React.FC<RequirementFormProps> = ({
           >
             <option value={Status.PENDING}>Pending</option>
             <option value={Status.IN_PROGRESS}>In Progress</option>
+            <option value={Status.TO_DO}>To Do</option>
             <option value={Status.DONE}>Done</option>
           </select>
         </div>
@@ -201,15 +214,17 @@ const RequirementForm: React.FC<RequirementFormProps> = ({
         <button
           type="button"
           onClick={onCancel}
-          className="px-6 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 transition-colors duration-200"
+          className="px-6 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 transition-colors duration-200 flex items-center gap-2"
         >
+          <i className="fas fa-cancel"></i>
           Cancel
         </button>
         <button
           type="submit"
-          className="px-6 py-2 text-sm font-medium text-white bg-primary rounded-md hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="px-6 py-2 text-sm font-medium text-white bg-primary rounded-md hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
           disabled={isLoading}
         >
+          <i className="fas fa-save"></i>
           {isLoading
             ? isEditMode
               ? "Saving..."

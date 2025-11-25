@@ -1,2 +1,2 @@
-export { LoadingSpinner } from './LoadingSpinner';
+export { default as LoadingSpinner } from './LoadingSpinner';
 export { Pagination } from './Pagination';

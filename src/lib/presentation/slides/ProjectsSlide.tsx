@@ -3,7 +3,7 @@ import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { useSelector, useDispatch } from "react-redux";
 import type { RootState } from "../../../app-lib/redux/store";
 import { Project as DomainProject } from "@/smartspecs/lib/domain";
-import { Project as ReduxProject } from "@/smartspecs/app-lib/redux/slices/ProjectsSlice";
+import { Project as ReduxProject } from "@/smartspecs/app-lib/interfaces/project";
 import { ProjectAdapter } from "@/smartspecs/lib/adapters/ProjectAdapter";
 
 interface ProjectsState {

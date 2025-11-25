@@ -104,6 +104,7 @@ firebase login
 firebase init
 firebase deploy
 ```
+**Note:** you should have an `env.local` file (not `.env`) with environment variables.
 
 After deployment, go to Firebase Console → Hosting section. There you will find the deployment URL and additional deployment details.
 

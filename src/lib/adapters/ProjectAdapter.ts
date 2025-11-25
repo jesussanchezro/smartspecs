@@ -1,5 +1,5 @@
 import { Project as DomainProject } from "@/smartspecs/lib/domain";
-import { Project as ReduxProject } from "@/smartspecs/app-lib/redux/slices/ProjectsSlice";
+import { Project as ReduxProject } from "@/smartspecs/app-lib/interfaces/project";
 
 export const ProjectAdapter = {
   toDomain: (project: ReduxProject): DomainProject => ({

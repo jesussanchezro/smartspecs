@@ -21,7 +21,7 @@
     "chromadb": "^1.10.5",
     "cohere-ai": "^7.16.0",
     "dotenv": "^16.4.7",
-    "firebase": "^11.7.1",
+    "firebase": "^11.10.0",
     "framer-motion": "^12.7.3",
     "graphql-request": "^7.1.2",
     "html-react-parser": "^5.2.2",
